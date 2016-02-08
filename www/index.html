@@ -13,6 +13,16 @@
                        <span class="name">{{ name }}</span>
                     </div>  
                 {{ / }}
+                <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+                    {{ #nodes: index1 }}
+                        {{ #nodes: index2 }}
+                             {{ #if(index1 != index2) }}                                 
+                                <line x1="{{ nodes[index1].geometry.x }}" y1="{{ nodes[index1].geometry.y }}" x2="{{ nodes[index2].geometry.x }}" y2="{{ nodes[index2].geometry.y }}" stroke="#444" stroke-width="1" stroke-linecap="round"/>
+                             {{ /if }}
+                        {{ / }}
+                    {{ / }}
+
+                </svg>
             </script>
         </div>
     </body>
