@@ -3,15 +3,19 @@ $(function () {
     var nodes = [ 
                 { 
                     name: "Hello",
-                    geometry: { x: 20, y: 30, w: 30, h: 50 }
+                    geometry: { x: 100, y: 100 }
                 },
                 {
                     name: "World",
-                    geometry: { x: 60, y: 50, w: 20, h: 20 }
+                    geometry: { x: 300, y: 50 }
                 },
                 { 
                     name: "Fnord",
-                    geometry: { x: 10, y: 10, w: 10, h: 10 }
+                    geometry: { x: 100, y: 300 }
+                },
+                {
+                    name: "Supercalifragilisticexpialidocious",
+                    geometry: { x: 400, y: 200 }
                 }
             ];
 
@@ -25,10 +29,11 @@ $(function () {
     var selected_node_index = null;
     var previous_pagex;
     var previous_pagey;
-    $('#main').on('mousedown', '.node', function (e) {
+    $('#main').on('mousedown', 'circle.node,text.node', function (e) {
         selected_node_index = $(this).data('node-index');
         previous_pagex = e.pageX;
         previous_pagey = e.pageY;
+        e.preventDefault();
     }).on('mouseup mouseleave', function (e) {
         selected_node_index = null;
     }).on('mousemove', function (e) {
@@ -38,24 +43,7 @@ $(function () {
             geometry.y += e.pageY - previous_pagey;
             previous_pagex = e.pageX;
             previous_pagey = e.pageY;
+            e.preventDefault();
         }
     })
-        /*var geometry = ractive.get('nodes.' + $(this).data('node-index') + '.geometry');
-        var ox = geometry.x; var px = e.pageX;
-        var oy = geometry.y; var py = e.pageY;
-        $(this).on('mousemove', function (e) {
-            geometry.x = ox + e.pageX - px;
-            geometry.y = oy + e.pageY - py;
-            ractive.set('nodes.' + $(this).data('node-index') + '.geometry', geometry);
-        });
-    });
-    $('#main').on('mouseup mouseleave', '.node', function (e) {
-        $(this).off('mousemove');
-        $('body').on('mouseup', mouseup);
-        function mouseup(e) {
-            $(this).off('mousemove');
-            $('body').off('mouseup', mouseup);
-        };
-    });*/
-    
 });
