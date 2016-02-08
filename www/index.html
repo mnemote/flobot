@@ -1,0 +1,19 @@
+<html>
+    <head>
+        <script src="./lib/jquery-2.2.0.min.js"></script>
+        <script src='./lib/ractive.min.js'></script>
+        <script src="./roboflow.js"></script>
+        <link rel="stylesheet" href="./roboflow.css"/>
+    </head>
+    <body>
+        <div id="main">
+            <script id="template" type="ractive">
+                {{ #nodes:index }}
+                    <div class="node" data-node-index="{{ index }}" style="left: {{ geometry.x }}px; top: {{ geometry.y }}px; width: {{ geometry.w }}px; height: {{ geometry.h }}px">
+                       <span class="name">{{ name }}</span>
+                    </div>  
+                {{ / }}
+            </script>
+        </div>
+    </body>
+</html>
