@@ -11,13 +11,13 @@
                 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100%" height="100%" style="border: 1px solid green;">
                     {{ #nodes: index1 }}
                         {{ #nodes: index2 }}
-                             {{ #if ((index2 + 2) % (index1 + 2) == 0) }}
-                                <line class="edge" x1="{{ nodes[index1].geometry.x }}" y1="{{ nodes[index1].geometry.y }}" x2="{{ nodes[index2].geometry.x }}" y2="{{ nodes[index2].geometry.y }}"/>
+                             {{ #if (index2 > index1 && (index2 + 2) % (index1 + 2) == 0) }}
+                                <line class="edge" data-node-index="{{ index1 }} {{ index2 }}" x1="{{ nodes[index1].geometry.x }}" y1="{{ nodes[index1].geometry.y }}" x2="{{ nodes[index2].geometry.x }}" y2="{{ nodes[index2].geometry.y }}"/>
                              {{ /if }}
                         {{ / }}
                     {{ / }}
                     {{ #nodes:index }}
-                        <circle class="node" data-node-index="{{ index }}" cx="{{ geometry.x }}" cy="{{ geometry.y }}" r="{{ geometry.r }}"/>
+                        <rect class="node" data-node-index="{{ index }}" x="{{ geometry.x - (geometry.w / 2) }}" y="{{ geometry.y - (geometry.h / 2) }}" width="{{ geometry.w }}" height="{{ geometry.h }}" rx="15" ry="15"/>
                         <text class="node" data-node-index="{{ index }}" x="{{ geometry.x }}" y="{{ geometry.y }}">{{ name }}</text>
 
                     {{ / }}

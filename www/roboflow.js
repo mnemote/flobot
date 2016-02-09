@@ -19,6 +19,8 @@ $(function () {
         }
     ];
 
+    nodes.forEach(function (node) { node.geometry.w = 10; node.geometry.h = 10; });
+    
     var ractive = new Ractive({
         template: '#template',
         el: '#main',
@@ -27,21 +29,25 @@ $(function () {
     });
 
     $('text.node').each(function (n, x) {
-        nodes[$(x).data('node-index')].geometry.r = x.clientWidth / 2 + 20;
+        var geometry = nodes[$(x).data('node-index')].geometry;
+        geometry.w = x.clientWidth + 20;
+        geometry.h = x.clientHeight + 20;
     });
     ractive.update();
 
     var selected_node_index = null;
     var offset_x;
     var offset_y;
-    $('#main').on('mousedown', 'circle.node,text.node', function (e) {
+    $('#main').on('mousedown', '.node', function (e) {
         selected_node_index = $(this).data('node-index');
+        $('*[data-node-index~=' + selected_node_index + ']').addClass('drag');
         var geometry = nodes[selected_node_index].geometry;
         offset_x = geometry.x - e.pageX;
         offset_y = geometry.y - e.pageY;
         e.preventDefault();
     }).on('mouseup mouseleave', function (e) {
         if (selected_node_index !== null) {
+            $('.drag').removeClass('drag');
             setTimeout(function () { selected_node_index = null; }, 100);
             e.preventDefault();
         }
@@ -54,7 +60,7 @@ $(function () {
         }
     }).on('click', function (e) {
         if (selected_node_index === null) {
-            nodes.push({ name: 'whatever', geometry: { x: e.pageX, y: e.pageY, r: 50 }});
+            nodes.push({ name: 'whatever', geometry: { x: e.pageX, y: e.pageY, w: 100, h: 40 }});
         }
         e.preventDefault();
     });

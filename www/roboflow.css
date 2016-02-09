@@ -1,5 +1,7 @@
 div#main { position: relative; height: 100%;}
 div.node { position: absolute; border: 1px solid red;}
-circle.node { stroke: blue; stroke-width: 2; fill: #DDD; cursor: move; }
+rect.node { stroke: blue; stroke-width: 2; fill: #DDD; cursor: move; box-shadow: 10px 10px 5px #000; }
+rect.drag { stroke: red; }
 text.node { dominant-baseline: middle; text-anchor: middle; cursor: move; }
 line.edge { stroke-width: 2; stroke: #888;}
+line.drag { stroke: red; }
