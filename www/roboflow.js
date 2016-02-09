@@ -26,6 +26,11 @@ $(function () {
         magic: true
     });
 
+    $('text.node').each(function (n, x) {
+        nodes[$(x).data('node-index')].geometry.r = x.clientWidth / 2 + 20;
+    });
+    ractive.update();
+
     var selected_node_index = null;
     var offset_x;
     var offset_y;
@@ -37,7 +42,7 @@ $(function () {
         e.preventDefault();
     }).on('mouseup mouseleave', function (e) {
         if (selected_node_index !== null) {
-            selected_node_index = null;
+            setTimeout(function () { selected_node_index = null; }, 100);
             e.preventDefault();
         }
     }).on('mousemove', function (e) {
@@ -47,5 +52,10 @@ $(function () {
             geometry.y = offset_y + e.pageY;
             e.preventDefault();
         }
-    })
+    }).on('click', function (e) {
+        if (selected_node_index === null) {
+            nodes.push({ name: 'whatever', geometry: { x: e.pageX, y: e.pageY, r: 50 }});
+        }
+        e.preventDefault();
+    });
 });
