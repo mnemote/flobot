@@ -1,5 +1,7 @@
-$(function () {
+window.onload = function () {
 
+    var svg_xmlns = "http://www.w3.org/2000/svg";
+        
     function max(numbers) {
         return Math.max.apply(null, numbers);
     }
@@ -46,35 +48,54 @@ $(function () {
         }
     ];
 
-    function add_to_dom(node) {
-        var xmlns = "http://www.w3.org/2000/svg";
-        var svg = document.getElementById('svg');
-        var group = document.createElementNS(xmlns, 'g');
-        group.setAttribute('transform', 'translate(' + node.geometry.x + ',' + node.geometry.y + ')');
-        group.setAttribute('y', 100);
-        svg.appendChild(group);
+    function DisplayNode(node) {
+        this.node = node;
+    }
 
-        var rect = document.createElementNS(xmlns, 'rect');
+    DisplayNode.prototype.update_position = function () {
+        this.group.setAttribute('transform', 'translate(' + this.node.geometry.x + ',' + this.node.geometry.y + ')');
+    }
+
+    DisplayNode.prototype.create_group = function (svg_element) {
+        var self = this;
+        this.group = document.createElementNS(svg_xmlns, 'g');
+        svg_element.appendChild(this.group);
+        this.group.addEventListener('mousedown', function (e) {
+            self.group.parentNode.appendChild(self.group); // move to top
+            self.drag_offset = [ self.node.geometry.x - e.screenX, self.node.geometry.y - e.screenY ]; 
+        });
+        this.group.addEventListener('mouseup', function (e) { self.drag_offset = null; })
+        this.group.addEventListener('mouseleave', function (e) { self.drag_offset = null; })
+        this.group.addEventListener('mousemove', function (e) {
+            if (self.drag_offset) {
+                self.node.geometry.x = self.drag_offset[0] + e.screenX;
+                self.node.geometry.y = self.drag_offset[1] + e.screenY;
+                self.update_position();
+            } 
+        })
+    }
+
+    DisplayNode.prototype.create_text = function () {
+        var rect = document.createElementNS(svg_xmlns, 'rect');
         rect.setAttribute('stroke', '#000');
         rect.setAttribute('fill', '#EEC');
-        group.appendChild(rect);
-        
+        this.group.appendChild(rect);
         var strings = [ 
-            node.inputs.map(function (x) { return x.label }),
-            [ node.label ],
-            node.outputs.map(function (x) { return x.label })
+            this.node.inputs.map(function (x) { return x.label }),
+            [ this.node.label ],
+            this.node.outputs.map(function (x) { return x.label })
         ].filter(function (ss) { return ss.length > 0 });
 
         var texts = strings.map(function (ss) { 
             return ss.map(function (s) {
-                var text = document.createElementNS(xmlns, 'text');
+                var text = document.createElementNS(svg_xmlns, 'text');
                 text.setAttribute('text-anchor', 'middle');
                 text.setAttribute('alignment-baseline', 'middle');
                 text.textContent = s;
-                group.appendChild(text);
+                this.group.appendChild(text);
                 return text;
-            });
-        });
+            }, this);
+        }, this);
 
         var line_height = max(texts.map(function (ts) {
             return ts.length ? max(ts.map(function (t) { return t.getBBox().height + 5; })) : 0; 
@@ -96,38 +117,25 @@ $(function () {
         });
     }
 
-/*
-    var selected_node_index = null;
-    var offset_x;
-    var offset_y;
-    $('#main').on('mousedown', '.node', function (e) {
-        selected_node_index = $(this).data('node-index');
-        $('*[data-node-index~=' + selected_node_index + ']').addClass('drag');
-        var geometry = nodes[selected_node_index].geometry;
-        offset_x = geometry.x - e.pageX;
-        offset_y = geometry.y - e.pageY;
-        e.preventDefault();
-    }).on('mouseup mouseleave', function (e) {
-        if (selected_node_index !== null) {
-            $('.drag').removeClass('drag');
-            setTimeout(function () { selected_node_index = null; }, 100);
-            e.preventDefault();
-        }
-    }).on('mousemove', function (e) {
-        if (selected_node_index !== null) {
-            var geometry = nodes[selected_node_index].geometry;
-            geometry.x = offset_x + e.pageX;
-            geometry.y = offset_y + e.pageY;
-            e.preventDefault();
-        }
-    }).on('click', function (e) {
-        if (selected_node_index === null) {
-            nodes.push({ name: '[ ' + nodes.length + ' ]', geometry: { x: e.pageX, y: e.pageY, w: 100, h: 40 }});
-        }
-        e.preventDefault();
+    var svg = document.createElementNS(svg_xmlns, 'svg');
+    svg.setAttribute('height', '100%');
+    svg.setAttribute('width', '100%');
+    document.body.appendChild(svg);
+
+    nodes.forEach(function (node) {
+        var display_node = new DisplayNode(node);
+        display_node.create_group(svg);
+        display_node.create_text();
+        display_node.update_position();
     });
-*/
 
-    nodes.forEach(add_to_dom);
+    svg.addEventListener('dblclick', function (e) {
+        var node = { label: 'Foo', inputs: [], outputs: [], geometry: { x: e.screenX, y: e.screenY } };
+        nodes.push(node);
+        var display_node = new DisplayNode(node);
+        display_node.create_group(svg);
+        display_node.create_text();
+        display_node.update_position();
+    });
 
-});
+}
