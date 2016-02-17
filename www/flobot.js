@@ -16,35 +16,21 @@ window.onload = function () {
             label: "Line Sensor",
             inputs: [ ],
             outputs: [
-                { label: "Left" },
-                { label: "Center" },
-                { label: "Right" }
+                { id: "L", label: "Left" },
+                { id: "R", label: "Right" }
             ],
             geometry: { x: 100, y: 100 }
         },
         {
             id: "MD1",
             label: "Motor Driver",
-            inputs: [ { label: "Left"}, { label: "Right" } ],
+            inputs: [
+                { id: "L", label: "Left" },
+                { id: "R", label: "Right" }
+            ],
             outputs: [ ],
-            connect: [ "C1", "C2" ],
+            connect: [ "LS1.L", "LS1.R" ],
             geometry: { x: 300, y: 450 }
-        },
-        { 
-            id: "C1",
-            label: "compare",
-            inputs: [ { label: "a" }, { label: "b" } ],
-            connect: [ "LS1.Right", "LS1.Left" ],
-            outputs: [ { label: "a-b" } ],
-            geometry: { x: 100, y: 300 }
-        },
-        {
-            id: "C2",
-            label: "compare",
-            inputs: [ { label: "a" }, { label: "b" } ],
-            connect: [ "LS1.Right", "LS1.Left" ],
-            outputs: [ { label: "a-b" } ],
-            geometry: { x: 400, y: 200 }
         }
     ];
 
@@ -53,7 +39,10 @@ window.onload = function () {
     }
 
     DisplayNode.prototype.update_position = function () {
-        this.group.setAttribute('transform', 'translate(' + this.node.geometry.x + ',' + this.node.geometry.y + ')');
+        var x = this.node.geometry.x;
+        var y = this.node.geometry.y;
+        this.group.setAttribute('transform', 'translate(' + x + ',' + y + ')');
+        this.spline.setAttribute('d', 'M' + (x+50) + ' ' + y + 'C' + (x+50) + ' ' + (y-100) + ' 0 100 0 0');
     }
 
     DisplayNode.prototype.create_group = function (svg_element) {
@@ -72,7 +61,12 @@ window.onload = function () {
                 self.node.geometry.y = self.drag_offset[1] + e.screenY;
                 self.update_position();
             } 
-        })
+        });
+    
+        this.spline = document.createElementNS(svg_xmlns, 'path');
+        this.spline.setAttribute('fill', 'transparent');
+        this.spline.setAttribute('stroke', 'blue');
+        svg_element.appendChild(this.spline);
     }
 
     DisplayNode.prototype.create_text = function () {
@@ -137,5 +131,4 @@ window.onload = function () {
         display_node.create_text();
         display_node.update_position();
     });
-
 }
