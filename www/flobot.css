@@ -4,3 +4,4 @@ rect.node { stroke: blue; stroke-width: 2; fill: #DDD; cursor: move; box-shadow:
 text.node { dominant-baseline: middle; text-anchor: middle; cursor: move; }
 path.edge { fill: transparent; stroke-width: 2; stroke: #888;}
 g.drag rect.node { stroke: red; fill: #FDD; }
+path.drag { stroke: red; }

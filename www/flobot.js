@@ -61,9 +61,15 @@ window.onload = function () {
     }
 
     DisplayEdge.prototype.update_position = function () {
-        var y3 = (this.y1 + this.y2) / 2;
-        this.spline.setAttribute('d', 'M' + this.x1 + ' ' + this.y1 + 'C' + this.x1 + ' ' + y3 +
-                                      ' ' + this.x2 + ' ' + y3 + ' ' + this.x2 + ' ' + this.y2);
+        // XXX TODO continue playing with this
+        var dy = Math.abs(this.y1 - this.y2) * 0.5 + 20;
+        var dx = (this.y2 > this.y1) ? Math.sign(this.x2 - this.x1) * dy : 0;
+        
+        this.spline.setAttribute('d', 'M' + this.x1 + ' ' + this.y1 +
+                                      'C' + (this.x1 + dx) + ' ' + (this.y1 - dy) +
+                                      ' ' + (this.x2 - dx) + ' ' + (this.y2 + dy) +
+                                      ' ' + this.x2 + ' ' + this.y2
+                                );
     }
 
     DisplayEdge.prototype.update_src = function (x, y) {
@@ -114,9 +120,16 @@ window.onload = function () {
         this.group.addEventListener('mousedown', function (e) {
             self.group.parentNode.appendChild(self.group); // move to top
             self.drag_offset = [ self.node.geometry.x - e.screenX, self.node.geometry.y - e.screenY ]; 
-            self.group.setAttribute('class', 'drag');
+            self.group.setAttribute('class', 'node drag');
+            self.edges_in.forEach(function (de) { if (de) de.spline.setAttribute('class', 'edge drag') });
+            self.edges_out.forEach(function (de) { if (de) de.spline.setAttribute('class', 'edge drag') });
         });
-        function end_drag() { self.drag_offset = null; self.group.setAttribute('class', ''); }
+        function end_drag() {
+            self.drag_offset = null;
+            self.group.setAttribute('class', 'node');
+            self.edges_in.forEach(function (de) { if (de) de.spline.setAttribute('class', 'edge') });
+            self.edges_out.forEach(function (de) { if (de) de.spline.setAttribute('class', 'edge') });
+        }
         this.group.addEventListener('mouseup', end_drag);
         this.group.addEventListener('mouseleave', end_drag);
         this.group.addEventListener('mousemove', function (e) {
