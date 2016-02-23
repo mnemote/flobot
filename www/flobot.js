@@ -21,6 +21,28 @@ window.onload = function () {
             ],
             geometry: { x: 100, y: 100 }
         },
+        { 
+            id: "LD1",
+            label: "Light Sensor",
+            inputs: [],
+            outputs: [
+                { id: "L", label: "Level"}
+            ],
+            geometry: { x: 600, y: 50 }
+        },
+        {
+            id: "SUB1",
+            label: "Subtract",
+            inputs: [
+                { id: "A", label: "A"},
+                { id: "B", label: "B"},
+            ],
+            outputs: [ 
+                { id: "S", label: "A-B"}
+            ],
+            connect: [ [ 0, 1 ], [1, 0] ],
+            geometry: { x: 500, y: 200 }
+        },
         {
             id: "MD1",
             label: "Motor Driver",
@@ -29,20 +51,60 @@ window.onload = function () {
                 { id: "R", label: "Right" }
             ],
             outputs: [ ],
-            connect: [ "LS1.L", "LS1.R" ],
+            connect: [ [0,0], [2,0] ],
             geometry: { x: 300, y: 450 }
         }
     ];
 
+    function DisplayEdge() {
+        this.x1 = this.y1 = this.x2 = this.y2 = 0;
+    }
+
+    DisplayEdge.prototype.update_position = function () {
+        var y3 = (this.y1 + this.y2) / 2;
+        this.spline.setAttribute('d', 'M' + this.x1 + ' ' + this.y1 + 'C' + this.x1 + ' ' + y3 +
+                                      ' ' + this.x2 + ' ' + y3 + ' ' + this.x2 + ' ' + this.y2);
+    }
+
+    DisplayEdge.prototype.update_src = function (x, y) {
+        this.x1 = x; this.y1 = y; this.update_position();
+    }
+
+    DisplayEdge.prototype.update_dst = function (x, y) {
+        this.x2 = x; this.y2 = y; this.update_position();
+    }
+    
+    DisplayEdge.prototype.create_spline = function(svg_element) {
+        this.spline = document.createElementNS(svg_xmlns, 'path');
+        this.spline.setAttribute('class', 'edge');
+        svg_element.appendChild(this.spline);
+    }
+
+
     function DisplayNode(node) {
         this.node = node;
+        this.edges_in = [];
+        this.edges_out = [];
     }
 
     DisplayNode.prototype.update_position = function () {
         var x = this.node.geometry.x;
         var y = this.node.geometry.y;
         this.group.setAttribute('transform', 'translate(' + x + ',' + y + ')');
-        this.spline.setAttribute('d', 'M' + (x+50) + ' ' + y + 'C' + (x+50) + ' ' + (y-100) + ' 0 100 0 0');
+        this.edges_in.forEach(function (edge, n) {
+            if (edge) {
+                var x1 = this.node.geometry.x + (this.width / this.node.inputs.length / 2) * (n * 2 + 1);
+                var y1 = this.node.geometry.y;
+                edge.update_src(x1, y1);
+            }
+        }, this);
+        this.edges_out.forEach(function (edge, n) {
+            if (edge) {
+                var x1 = this.node.geometry.x + (this.width / this.node.outputs.length / 2) * (n * 2 + 1);
+                var y1 = this.node.geometry.y + this.height;
+                edge.update_dst(x1, y1);
+            }
+        }, this);
     }
 
     DisplayNode.prototype.create_group = function (svg_element) {
@@ -52,9 +114,11 @@ window.onload = function () {
         this.group.addEventListener('mousedown', function (e) {
             self.group.parentNode.appendChild(self.group); // move to top
             self.drag_offset = [ self.node.geometry.x - e.screenX, self.node.geometry.y - e.screenY ]; 
+            self.group.setAttribute('class', 'drag');
         });
-        this.group.addEventListener('mouseup', function (e) { self.drag_offset = null; })
-        this.group.addEventListener('mouseleave', function (e) { self.drag_offset = null; })
+        function end_drag() { self.drag_offset = null; self.group.setAttribute('class', ''); }
+        this.group.addEventListener('mouseup', end_drag);
+        this.group.addEventListener('mouseleave', end_drag);
         this.group.addEventListener('mousemove', function (e) {
             if (self.drag_offset) {
                 self.node.geometry.x = self.drag_offset[0] + e.screenX;
@@ -62,17 +126,29 @@ window.onload = function () {
                 self.update_position();
             } 
         });
-    
-        this.spline = document.createElementNS(svg_xmlns, 'path');
-        this.spline.setAttribute('fill', 'transparent');
-        this.spline.setAttribute('stroke', 'blue');
-        svg_element.appendChild(this.spline);
+    }
+
+    DisplayNode.prototype.create_edges = function (svg_element) {
+        if (!this.node.connect) return;
+        this.node.connect.forEach(function (other_node_port, this_port) {
+            if (other_node_port) {
+                var other = display_nodes[other_node_port[0]];
+                var other_port = other_node_port[1];
+             
+                var edge = new DisplayEdge();
+                edge.create_spline(svg_element);
+                this.edges_in[this_port] = edge;
+                other.edges_out[other_port] = edge;
+            }
+        }, this);
+        this.edges_out = this.node.outputs.map(function (output, n) {
+            return null;
+        });
     }
 
     DisplayNode.prototype.create_text = function () {
         var rect = document.createElementNS(svg_xmlns, 'rect');
-        rect.setAttribute('stroke', '#000');
-        rect.setAttribute('fill', '#EEC');
+        rect.setAttribute('class', 'node');
         this.group.appendChild(rect);
         var strings = [ 
             this.node.inputs.map(function (x) { return x.label }),
@@ -98,17 +174,18 @@ window.onload = function () {
         var max_widths = texts.map(function (ts) {
             return ts.length ? max(ts.map(function (t) { return t.getBBox().width + 10; })) : 0;
         });
-        var width = max(max_widths.map(function(w, i) { return w * texts[i].length }));
+        this.width = max(max_widths.map(function(w, i) { return w * texts[i].length }));
+        this.height = line_height * texts.length;
 
-        rect.setAttribute('width', width);
-        rect.setAttribute('height', line_height * texts.length);
+        rect.setAttribute('width', this.width);
+        rect.setAttribute('height', this.height);
         
         texts.forEach(function (ts, i) {
             ts.forEach(function (t, j) {
-                t.setAttribute('x', (width / ts.length / 2) * (2 * j + 1));
+                t.setAttribute('x', (this.width / ts.length / 2) * (2 * j + 1));
                 t.setAttribute('y', (i+0.5) * line_height);
-            });
-        });
+            }, this);
+        }, this);
     }
 
     var svg = document.createElementNS(svg_xmlns, 'svg');
@@ -116,11 +193,19 @@ window.onload = function () {
     svg.setAttribute('width', '100%');
     document.body.appendChild(svg);
 
-    nodes.forEach(function (node) {
+    var display_nodes = nodes.map(function (node) {
         var display_node = new DisplayNode(node);
         display_node.create_group(svg);
         display_node.create_text();
-        display_node.update_position();
+        return display_node;
+    });
+
+    display_nodes.forEach(function (dnode) {
+        dnode.create_edges(svg);
+    });
+
+    display_nodes.forEach(function (dnode) {
+        dnode.update_position();
     });
 
     svg.addEventListener('dblclick', function (e) {
