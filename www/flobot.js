@@ -56,11 +56,87 @@ window.onload = function () {
         }
     ];
 
-    function DisplayEdge() {
+    // Page
+
+    function Page(json_data) {
+        this.svg_element = document.createElementNS(svg_xmlns, 'svg');
+        this.input_ports = new PortRow(svg_element, json_data.inputs);
+        this.output_ports = new PortRow(svg_element, json_data.outputs);
+        this.nodes = json_data.nodes.map(function (json_node) {
+            return Node(json_node);
+        });
+        this.edges = json_data.nodes.map(function (json_node) {
+            return json_node.connect.map(function (c) {
+                return Edge(c);
+            });
+        }).reduce(function (a,b) { return a.concat(b); });
+    }
+
+    // Node
+
+    function Node(json_node) {
+        this.group = document.createElementNS(svg_xmlns, 'g'); 
+        
+        this.rect = document.createElementNS(svg_xmlns, 'rect');
+        this.rect.setAttribute('class', 'node');
+        this.group.appendChild(this.rect);
+
+        this.text = document.createElementNS(svg_xmlns, 'text');
+        this.text.setAttribute('class', 'node-label');
+        this.text.textContent = json_node.label;
+        this.group.appendhild(this.text);
+
+        this.input_ports = new PortRow(this.inputs);
+        this.output_ports = new PortRow(this.outputs);
+        this.adjust_width();
+    }
+    
+    Node.prototype.adjust_width = function () {
+        this.width = Math.max(
+            this.input_portrow.min_width(),
+            this.output_portrow.min_width(),
+            this.text.getBBox().width
+        );
+        this.input_portrow.set_width(this.width);
+        this.output_portrow.set_width(this.width);        
+    }
+
+    // PortRow
+
+    function PortRow(node_element, ports) {
+        this.group = document.createElementNS(svg_xmlns, 'g');
+        this.group.setAttribute('class', 'ports');
+        this.text_elements = ports.map(function (port) {
+            var text = document.createElementNS(svg_xmlns, 'text');
+            text.textContent = port.label;
+            this.group.appendChild(text);
+            return text;
+        });
+        node_element.appendChild(this.group);
+    }
+
+    PortRow.prototype.min_width = function () {
+        var max_width = Math.max.apply(null, this.text_elements.map(function (te) {
+            return te.getBBox().width;
+        }));
+        return (max_width + 10) * this.text_elements.length;
+    }
+
+    PortRow.prototype.set_width = function (width) {
+        this.group.setAttribute('width', width); 
+        this.text_elements.forEach(function (te, n) {
+            te.setAttribute('width', width / this.text_elements.length);
+            te.setAttribute('x', (width / this.text_elements.length / 2) * (2 * n + 1));
+        });
+    }
+
+    // Edge
+
+    function Edge() {
         this.x1 = this.y1 = this.x2 = this.y2 = 0;
     }
 
-    DisplayEdge.prototype.update_position = function () {
+    Edge.prototype.update_position = function () {
         // XXX TODO continue playing with this
         var dy = Math.abs(this.y1 - this.y2) * 0.5 + 20;
         var dx = (this.y2 > this.y1) ? Math.sign(this.x2 - this.x1) * dy : 0;
@@ -72,20 +148,22 @@ window.onload = function () {
                                 );
     }
 
-    DisplayEdge.prototype.update_src = function (x, y) {
-        this.x1 = x; this.y1 = y; this.update_position();
+    Edge.prototype.update_src = function (x, y) {
+        this.x1 = Math.floor(x); this.y1 = Math.floor(y); this.update_position();
     }
 
-    DisplayEdge.prototype.update_dst = function (x, y) {
-        this.x2 = x; this.y2 = y; this.update_position();
+    Edge.prototype.update_dst = function (x, y) {
+        this.x2 = Math.floor(x); this.y2 = Math.floor(y); this.update_position();
     }
     
-    DisplayEdge.prototype.create_spline = function(svg_element) {
+    Edge.prototype.create_spline = function(svg_element) {
         this.spline = document.createElementNS(svg_xmlns, 'path');
         this.spline.setAttribute('class', 'edge');
         svg_element.appendChild(this.spline);
     }
 
+
+    // DisplayNode
 
     function DisplayNode(node) {
         this.node = node;

@@ -6,21 +6,46 @@
 #include <stdint.h>
 #include <stddef.h>
 
-typedef float vport_t;
+typedef int16_t virtual_port_t;
 
-typedef enum vinst_e {
+typedef enum virtual_inst_e {
+    NOP,
     ADD,
     SUB,
     MUL,
     DIV,
     CMP,
-} vinst_t;
+    DIF
+} virtual_inst_t;
 
-typedef struct __attribute__((packed)) vcode_s { 
-    vinst_t inst:6;
-    unsigned int vport_a:13;
-    unsigned int vport_b:13;
-} vcode_t;    
+typedef struct __attribute__((packed)) virtual_code_s { 
+    virtual_inst_t inst:8;
+    unsigned int port_a:12;
+    unsigned int port_b:12;
+} virtual_code_t;    
 
-void virtual_execute(vport_t *vports, int n_vports, vcode_t *vcodes, int n_vcodes);
+typedef struct virtual_prog_s {
+    uint16_t n_inputs;
+    uint16_t n_outputs;
+    uint16_t n_ports;
+    uint16_t n_codes;
+
+    virtual_port_t *ports;
+    virtual_code_t *codes;
+} virtual_prog_t;
+
+
+virtual_prog_t *virtual_init(size_t n_inputs, size_t n_outputs);
+
+void virtual_load_bin(virtual_prog_t *prog, uint8_t *buf, size_t bufsiz);
+
+void virtual_load_hex(virtual_prog_t *prog, uint8_t *buf, size_t bufsiz);
+
+void virtual_exec(virtual_prog_t *prog);
+
+void virtual_set_input(virtual_prog_t *prog, size_t input_num, virtual_port_t val);
+virtual_port_t virtual_get_output(virtual_prog_t *prog, size_t output_num);
+
+void virtual_free(virtual_prog_t *prog);
+
 #endif
