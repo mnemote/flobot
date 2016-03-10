@@ -39,12 +39,20 @@ virtual_prog_t *virtual_init(size_t n_inputs, size_t n_outputs);
 
 void virtual_load_bin(virtual_prog_t *prog, uint8_t *buf, size_t bufsiz);
 
-void virtual_load_hex(virtual_prog_t *prog, uint8_t *buf, size_t bufsiz);
+void virtual_load_hex(virtual_prog_t *prog, char *buf, size_t bufsiz);
 
 void virtual_exec(virtual_prog_t *prog);
 
 void virtual_set_input(virtual_prog_t *prog, size_t input_num, virtual_port_t val);
 virtual_port_t virtual_get_output(virtual_prog_t *prog, size_t output_num);
+
+size_t virtual_dump_bin_size(virtual_prog_t *prog);
+
+void virtual_dump_bin(virtual_prog_t *prog, uint8_t *buf);
+
+size_t virtual_dump_hex_size(virtual_prog_t *prog);
+
+void virtual_dump_hex(virtual_prog_t *prog, char *buf);
 
 void virtual_free(virtual_prog_t *prog);
 

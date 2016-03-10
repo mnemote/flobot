@@ -54,6 +54,7 @@ Hexadecimal Format
 
 Javascript's binary handling is even more deranged than C's string
 handling, so code can also be represented as groups of 8 hex digits
-separated by a single whitespace.
+separated by a single whitespace.  I'm not totally happy with this,
+but we'll see how it goes.
 
 

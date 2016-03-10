@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
@@ -9,7 +10,6 @@
 
 virtual_port_t _do_instruction(virtual_inst_t inst, virtual_port_t a, virtual_port_t b) {
     switch (inst) {
-        case NOP: return 0;
         case ADD: return a + b;
         case SUB: return a - b;
         case MUL: return (int16_t)((int32_t)a * (int32_t)b / 100);
@@ -28,6 +28,7 @@ virtual_prog_t *virtual_init(size_t n_inputs, size_t n_outputs) {
 
     prog->n_inputs = n_inputs;
     prog->n_outputs = n_outputs;
+    return prog;
 }
 
 void _reallocate(virtual_prog_t *prog) {
@@ -63,8 +64,8 @@ void virtual_load_bin(virtual_prog_t *prog, uint8_t *buf, size_t bufsiz) {
     } 
 }
 
-void virtual_load_hex(virtual_prog_t *prog, uint8_t *buf, size_t bufsiz) {
-    uint16_t i;
+void virtual_load_hex(virtual_prog_t *prog, char *buf, size_t bufsiz) {
+    int i;
 
     prog->n_codes = bufsiz / 9;
     _reallocate(prog);
@@ -75,7 +76,7 @@ void virtual_load_hex(virtual_prog_t *prog, uint8_t *buf, size_t bufsiz) {
 }
 
 void virtual_exec(virtual_prog_t *prog) {
-    uint16_t i;
+    int i;
     for (i=0; i<prog->n_codes; i++) {
         virtual_code_t vcode = prog->codes[i];
         if (vcode.inst != NOP) {
@@ -86,7 +87,30 @@ void virtual_exec(virtual_prog_t *prog) {
         }
     }
 }
-            
+   
+size_t virtual_dump_bin_size(virtual_prog_t *prog) {
+    return 2 * prog->n_ports;
+}
+ 
+void virtual_dump_bin(virtual_prog_t *prog, uint8_t *buf) {
+    int i;
+    for (i=0; i<prog->n_ports; i++) {
+        buf[i*2] = prog->ports[i] >> 8;
+        buf[i*2+1] = prog->ports[i] & 0xFF;
+    }
+}
+
+size_t virtual_dump_hex_size(virtual_prog_t *prog) {
+    return 5 * prog->n_ports;
+}
+
+void virtual_dump_hex(virtual_prog_t *prog, char *buf) {
+    int i;
+    for (i=0; i<prog->n_ports; i++) {
+        snprintf(buf+5*i, 5, "%04x ", (uint16_t)prog->ports[i]);
+    }
+}
+        
 void virtual_set_input(virtual_prog_t *prog, size_t input_num, virtual_port_t val) {
     prog->ports[input_num] = val;
 }
