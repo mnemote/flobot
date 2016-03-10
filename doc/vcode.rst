@@ -2,6 +2,26 @@
  FloBot: VM codes
 ==================
 
+.. note::
+
+  This VM is very sketchy and only intended to be a very early 
+  go at it, so I don't get all hung up on the details and never get
+  around to working on the other parts.  It will change a lot.
+
+  Important features are missing:
+
+  * Instructions can only have two inputs: an IF(,,) needs three!
+  * Instructions can only have one output: a flip-flop would be better
+    with two
+  * Instructions have no hidden state: I'd like to support
+    "differentiate" and "integrate" and "limit rate of change"
+    instructions to make it simple to get nice kinematics
+  * The encoding is really quite inefficient.
+
+  I'm wondering if I should just implement a Forth and get it over with :-)
+
+  But here's what's here for now:
+
 Ports
 =====
 
