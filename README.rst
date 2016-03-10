@@ -13,3 +13,11 @@ describe features which don't exist yet:
 * `Programmers Guide <doc/guide.rst>`_
 * `WiFi Configuration <doc/wifi.rst>`_
 * `(Sketchy) Virtual Machine Spec <doc/vcode.rst>`_
+
+FloBot is intended to run on an `ESP8266 <http://esp8266.com/>`_
+(or similar) based platform like
+`NodeMCU <http://nodemcu.com/>`_ (you can buy these on Ebay) or
+`Ciril <https://github.com/mnemote/ciril/>`_ (my other project,
+still vapourware). Each platform would
+include a hardware description file which describes the available
+ports and functions.
