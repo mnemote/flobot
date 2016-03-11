@@ -2,6 +2,37 @@
  FloBot: VM codes
 ==================
 
+Hardware Interface
+==================
+
+Programs start with a number of nodes defined: some inputs and some 
+outputs.  So our line follower might have inputs for line left and
+line right, and outputs for motor left and motor right.  These
+pre-existing nodes can't be deleted or created, they just are.
+
+Nodes are ordered so that connections from output to input are always
+from a lower numbered node to a higher one.  This eliminates the
+possibility of cycles and means that a single pass through all nodes
+is sufficient to recalculate everything.  Later, as an optimization, 
+running only some branches could be considered.
+
+Inserting Nodes
+---------------
+
+When a node is added to the program, it can just be inserte anywhere
+on the list.  If it isn't connected to anything, its position doesn't
+matter. 
+
+To keep nodes in order, every time an edge is added the nodes are
+rearranged to maintain this property.  If the user attempts to create
+a cycle, older links are broken to prevent this.  
+
+Serializing Nodes
+-----------------
+
+Once all this is done, nodes can easily be iterated over and turned into
+binary-encoded data for execution.
+
 .. note::
 
   This VM is very sketchy and only intended to be a very early 
