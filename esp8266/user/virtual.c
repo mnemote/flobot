@@ -2,11 +2,48 @@
 #include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <assert.h>
 
 #include "virtual.h"
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #define MAX(a,b) ((a)>(b)?(a):(b))
+
+
+void builtin_add(virtual_port_t ports[], size_t n_ports) {
+    int32_t sum = 0;
+    for (int i=0; i<n_ports-1; i++) sum += ports[i];
+    ports[n_ports-1] = sum;
+}
+
+void builtin_sub(virtual_port_t ports[], size_t n_ports) {
+    assert(n_ports == 3);
+    ports[2] = ports[0] - ports[1];    
+}
+
+void builtin_mul(virtual_port_t ports[], size_t n_ports) {
+    int32_t prod = 1;
+    for (int i=0; i<n_ports-1; i++) prod *= ports[i] / 100;
+    ports[n_ports-1] = prod;
+}
+
+void builtin_div(virtual_port_t ports[], size_t n_ports) {
+    assert(n_ports == 3);
+    ports[2] = (int32_t)ports[0] * 100 / ports[1];    
+}
+
+void builtin_cmp(virtual_port_t ports[], size_t n_ports) {
+    assert(n_ports == 2);
+    ports[1] = ports[0] < 0 ? -100 : ports[0] > 0 ? +100 : 0;
+}
+
+virtual_func_t builtins[] = {
+    { 1, "{name:\"ADD\"}", builtin_add },
+    { 2, "{name:\"SUB\"}", builtin_sub },
+    { 3, "{name:\"MUL\"}", builtin_mul },
+    { 4, "{name:\"DIV\"}", builtin_div },
+    { 5, "{name:\"CMP\"}", builtin_add },
+};
 
 virtual_port_t _do_instruction(virtual_inst_t inst, virtual_port_t a, virtual_port_t b) {
     switch (inst) {

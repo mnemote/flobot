@@ -8,6 +8,13 @@
 
 typedef int16_t virtual_port_t;
 
+typedef struct virtual_func_s {
+    uint8_t opcode;
+    char *json_data;
+    void(*func_call)(virtual_port_t[], size_t);
+} virtual_func_t;
+
+    
 typedef enum virtual_inst_e {
     NOP,
     ADD,
@@ -17,6 +24,7 @@ typedef enum virtual_inst_e {
     CMP,
     DIF
 } virtual_inst_t;
+
 
 typedef struct __attribute__((packed)) virtual_code_s { 
     virtual_inst_t inst:8;
