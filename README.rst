@@ -21,3 +21,7 @@ FloBot is intended to run on an `ESP8266 <http://esp8266.com/>`_
 still vapourware). Each platform would
 include a hardware description file which describes the available
 ports and functions.
+
+.. raw:: html
+
+    <iframe src="www/index.html" width="100%" height="420px" frameborder="1"></iframe>
