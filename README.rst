@@ -22,6 +22,9 @@ still vapourware). Each platform would
 include a hardware description file which describes the available
 ports and functions.
 
-.. raw:: html
+Live Demo
+=========
 
-    <iframe src="www/index.html" width="100%" height="420px" frameborder="1"></iframe>
+There's no robot attached, but you can see the GUI working here:
+
+* `Flobot live demo <https://cdn.rawgit.com/mnemote/flobot/master/www/index.html>`_
