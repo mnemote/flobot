@@ -1,6 +1,26 @@
 [
-    { "id": "LS1", "label": "Line Sensor", "outputs": ["L", "R"] },
-    { "id": "AL1", "label": "Ambient Light", "outputs": [""] },
-    { "id": "MO1", "label": "Motor (Left)", "inputs": [""] },
-    { "id": "MO2", "label": "Motor (Right)", "inputs": [""] }
+    {
+        "id": "LS1",
+        "label": "Line Sensor",
+        "outputs": ["L", "R"],
+        "geometry": { "x": 50, "y": 50 }
+    },
+    {
+        "id": "AL1",
+        "label": "Ambient Light",
+        "outputs": [""],
+        "geometry": { "x": 350, "y": 50 }
+    },
+    {
+        "id": "MO1",
+        "label": "Motor (Left)",
+        "inputs": [""],
+        "geometry": { "x": 50, "y": 350 }
+    },
+    {
+        "id": "MO2",
+        "label": "Motor (Right)",
+        "inputs": [""],
+        "geometry": { "x": 350, "y": 350 }
+    }
 ]
