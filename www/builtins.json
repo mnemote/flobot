@@ -22,5 +22,12 @@
         "label": "Motor (Right)",
         "inputs": [""],
         "geometry": { "x": 350, "y": 350 }
+    },
+    {
+	"id": "FF",
+        "label": "Flip-flop",
+        "inputs": ["S", "R"],
+        "outputs": ["Q", "!Q"],
+        "geometry": { "x": 200, "y": 200 }
     }
 ]

@@ -115,7 +115,12 @@ window.onload = function () {
         svg_group.appendChild(this.svg_circle);
         if (this.label) {
             this.svg_label = document.createElementNS(svg_xmlns, 'text');
-            this.svg_label.textContent = this.label;
+            if (this.label.substr(0,1) == "!") {
+                this.svg_label.textContent = this.label.substr(1);
+                this.svg_label.setAttribute('style', 'text-decoration: overline');
+            } else {
+                this.svg_label.textContent = this.label;
+            }
             this.svg_label.setAttribute('class', 'port');
             this.svg_label.setAttribute('x', this.offset_x);
             this.svg_label.setAttribute('y', this.offset_y);
@@ -132,7 +137,7 @@ window.onload = function () {
         this.edges.forEach(function (e) { e.deinit(); });
         this.edges = [];
     }
-    
+
     Port.prototype.create_edge = function(other) {
         var edge = new Edge(this, other);
         this.edges.push(edge);
@@ -195,9 +200,13 @@ window.onload = function () {
     Node.prototype.init = function(svg_element) {
         this.svg_group = document.createElementNS(svg_xmlns, 'g');
         this.svg_group.setAttribute('class', 'node');
-        this.svg_group._target = this;
         svg_element.appendChild(this.svg_group);
+        
         this.svg_rect = document.createElementNS(svg_xmlns, 'rect');
+        this.svg_rect.setAttribute('width', 150);
+        this.svg_rect.setAttribute('height', 50);
+        this.svg_rect.setAttribute('rx', 5);
+        this.svg_rect._target = this;
         this.svg_group.appendChild(this.svg_rect);
 
         this.svg_label = document.createElementNS(svg_xmlns, 'text');
@@ -234,7 +243,7 @@ window.onload = function () {
         this.nodes.forEach(this.node_init, this);
     
         function new_node() {
-            var node = new Node(this, {label: "Foo",inputs: ['a','b'], outputs: ['c']}, this.nodes.length);
+            var node = new Node(this, {label: "Difference", inputs: ['+','-'], outputs: ['=']}, this.nodes.length);
             this.nodes.push(node);
             node.init(this.svg_element);
         }
