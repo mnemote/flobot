@@ -1,0 +1,6 @@
+[
+    { "id": "LS1", "label": "Line Sensor", "outputs": ["L", "R"] },
+    { "id": "AL1", "label": "Ambient Light", "outputs": ["X"] },
+    { "id": "MO1", "label": "Motor (Left)", "inputs": ["L"] },
+    { "id": "MO2", "label": "Motor (Right)", "inputs": ["R"] }
+]

@@ -1,7 +1,12 @@
 div#main { position: relative; height: 100%;}
-div.node { position: absolute; border: 1px solid red;}
-rect.node { stroke: blue; stroke-width: 2; fill: #DDD; cursor: move; box-shadow: 10px 10px 5px #000; }
-text.node { dominant-baseline: middle; text-anchor: middle; cursor: move; }
+
+g.node { position: absolute; border: 1px solid red;}
+g.node rect { width: 150px; height: 50px; stroke: blue; stroke-width: 2; fill: #DDD; cursor: move; box-shadow: 10px 10px 5px #000; }
+g.node text { dominant-baseline: middle; text-anchor: middle; cursor: move; }
+g.node.drag rect { stroke: red; fill: #FDD; }
+
+circle.port { stroke: blue; stroke-width: 2; fill: #DDD; cursor: crosshair }
+g.node.drag circle.port { stroke: red; fill: #FDD; }
+
 path.edge { fill: transparent; stroke-width: 2; stroke: #888;}
-g.drag rect.node { stroke: red; fill: #FDD; }
-path.drag { stroke: red; }
+path.edge.drag { stroke: red; }

@@ -1,5 +1,5 @@
 window.onload = function () {
-
+    
     var svg_xmlns = "http://www.w3.org/2000/svg";
         
     function max(numbers) {
@@ -10,301 +10,195 @@ window.onload = function () {
         return numbers.reduce(function (a,b) { return a+b; }, 0);
     }
 
-    var nodes = [ 
-        {
-            id: "LS1",
-            label: "Line Sensor",
-            inputs: [ ],
-            outputs: [
-                { id: "L", label: "Left" },
-                { id: "R", label: "Right" }
-            ],
-            geometry: { x: 100, y: 100 }
-        },
-        { 
-            id: "LD1",
-            label: "Light Sensor",
-            inputs: [],
-            outputs: [
-                { id: "L", label: "Level"}
-            ],
-            geometry: { x: 600, y: 50 }
-        },
-        {
-            id: "SUB1",
-            label: "Subtract",
-            inputs: [
-                { id: "A", label: "A"},
-                { id: "B", label: "B"},
-            ],
-            outputs: [ 
-                { id: "S", label: "A-B"}
-            ],
-            connect: [ [ 0, 1 ], [1, 0] ],
-            geometry: { x: 500, y: 200 }
-        },
-        {
-            id: "MD1",
-            label: "Motor Driver",
-            inputs: [
-                { id: "L", label: "Left" },
-                { id: "R", label: "Right" }
-            ],
-            outputs: [ ],
-            connect: [ [0,0], [2,0] ],
-            geometry: { x: 300, y: 450 }
-        }
-    ];
-
-    // Page
-
-    function Page(json_data) {
-        this.svg_element = document.createElementNS(svg_xmlns, 'svg');
-        this.input_ports = new PortRow(svg_element, json_data.inputs);
-        this.output_ports = new PortRow(svg_element, json_data.outputs);
-        this.nodes = json_data.nodes.map(function (json_node) {
-            return Node(json_node);
-        });
-        this.edges = json_data.nodes.map(function (json_node) {
-            return json_node.connect.map(function (c) {
-                return Edge(c);
-            });
-        }).reduce(function (a,b) { return a.concat(b); });
+    function ajax_get(url, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 3) {
+                callback(xhr.responseText);
+            }
+        };
+        xhr.open("GET", url, true);
+        xhr.send();
     }
 
-    // Node
-
-    function Node(json_node) {
-        this.group = document.createElementNS(svg_xmlns, 'g'); 
-        
-        this.rect = document.createElementNS(svg_xmlns, 'rect');
-        this.rect.setAttribute('class', 'node');
-        this.group.appendChild(this.rect);
-
-        this.text = document.createElementNS(svg_xmlns, 'text');
-        this.text.setAttribute('class', 'node-label');
-        this.text.textContent = json_node.label;
-        this.group.appendhild(this.text);
-
-        this.input_ports = new PortRow(this.inputs);
-        this.output_ports = new PortRow(this.outputs);
-        this.adjust_width();
-    }
     
-    Node.prototype.adjust_width = function () {
-        this.width = Math.max(
-            this.input_portrow.min_width(),
-            this.output_portrow.min_width(),
-            this.text.getBBox().width
-        );
-        this.input_portrow.set_width(this.width);
-        this.output_portrow.set_width(this.width);        
+    // EDGE
+   
+    var Edge = function(port_src, port_dst) {
+        this.port1 = port_src;
+        this.port2 = port_dst;
     }
 
-    // PortRow
-
-    function PortRow(node_element, ports) {
-        this.group = document.createElementNS(svg_xmlns, 'g');
-        this.group.setAttribute('class', 'ports');
-        this.text_elements = ports.map(function (port) {
-            var text = document.createElementNS(svg_xmlns, 'text');
-            text.textContent = port.label;
-            this.group.appendChild(text);
-            return text;
-        });
-        node_element.appendChild(this.group);
-    }
-
-    PortRow.prototype.min_width = function () {
-        var max_width = Math.max.apply(null, this.text_elements.map(function (te) {
-            return te.getBBox().width;
-        }));
-        return (max_width + 10) * this.text_elements.length;
-    }
-
-    PortRow.prototype.set_width = function (width) {
-        this.group.setAttribute('width', width); 
-        this.text_elements.forEach(function (te, n) {
-            te.setAttribute('width', width / this.text_elements.length);
-            te.setAttribute('x', (width / this.text_elements.length / 2) * (2 * n + 1));
-        });
-    }
-
-    // Edge
-
-    function Edge() {
-        this.x1 = this.y1 = this.x2 = this.y2 = 0;
-    }
-
-    Edge.prototype.update_position = function () {
+    Edge.prototype.update = function() {
         // XXX TODO continue playing with this
-        var dy = Math.abs(this.y1 - this.y2) * 0.5 + 20;
-        var dx = (this.y2 > this.y1) ? Math.sign(this.x2 - this.x1) * dy : 0;
-        
-        this.spline.setAttribute('d', 'M' + this.x1 + ' ' + this.y1 +
-                                      'C' + (this.x1 + dx) + ' ' + (this.y1 - dy) +
-                                      ' ' + (this.x2 - dx) + ' ' + (this.y2 + dy) +
-                                      ' ' + this.x2 + ' ' + this.y2
-                                );
+        var x1 = this.port1.get_geometry().x;
+        var y1 = this.port1.get_geometry().y;
+        var x2 = this.port2.get_geometry().x;
+        var y2 = this.port2.get_geometry().y;
+        var dy = Math.abs(y1 - y2) * 0.5 + 20;
+        var dx = (y2 > y1) ? Math.sign(x2 - x1) * dy : 0;
+        var spline_path = ['M', x1, y1, 'C', x1 + dx, y1 - dy, x2 - dx, y2 + dy, x2, y2].join(" ");
+        this.svg_spline.setAttribute('d', spline_path);
     }
 
-    Edge.prototype.update_src = function (x, y) {
-        this.x1 = Math.floor(x); this.y1 = Math.floor(y); this.update_position();
-    }
-
-    Edge.prototype.update_dst = function (x, y) {
-        this.x2 = Math.floor(x); this.y2 = Math.floor(y); this.update_position();
-    }
+    Edge.prototype.init = function(svg_element) {
+        this.svg_spline = document.createElementNS(svg_xmlns, 'path');
+        this.svg_spline.setAttribute('class', 'edge');
+        svg_element.appendChild(this.svg_spline);
+    }   
     
-    Edge.prototype.create_spline = function(svg_element) {
-        this.spline = document.createElementNS(svg_xmlns, 'path');
-        this.spline.setAttribute('class', 'edge');
-        svg_element.appendChild(this.spline);
-    }
+    // PORT
 
-
-    // DisplayNode
-
-    function DisplayNode(node) {
+    var Port = function(node, label, offset_x, offset_y) {
         this.node = node;
-        this.edges_in = [];
-        this.edges_out = [];
+        this.label = label;
+        this.offset_x = offset_x;
+        this.offset_y = offset_y;
+        this.edges = [];
     }
 
-    DisplayNode.prototype.update_position = function () {
-        var x = this.node.geometry.x;
-        var y = this.node.geometry.y;
-        this.group.setAttribute('transform', 'translate(' + x + ',' + y + ')');
-        this.edges_in.forEach(function (edge, n) {
-            if (edge) {
-                var x1 = this.node.geometry.x + (this.width / this.node.inputs.length / 2) * (n * 2 + 1);
-                var y1 = this.node.geometry.y;
-                edge.update_src(x1, y1);
-            }
-        }, this);
-        this.edges_out.forEach(function (edge, n) {
-            if (edge) {
-                var x1 = this.node.geometry.x + (this.width / this.node.outputs.length / 2) * (n * 2 + 1);
-                var y1 = this.node.geometry.y + this.height;
-                edge.update_dst(x1, y1);
-            }
-        }, this);
+    Port.prototype.init = function(svg_group) {
+        this.svg_circle = document.createElementNS(svg_xmlns, 'circle');
+        this.svg_circle.setAttribute('class', 'port');
+        this.svg_circle.setAttribute('cx', this.offset_x);
+        this.svg_circle.setAttribute('cy', this.offset_y);
+        this.svg_circle.setAttribute('r', 10);
+        svg_group.appendChild(this.svg_circle);
     }
 
-    DisplayNode.prototype.create_group = function (svg_element) {
-        var self = this;
-        this.group = document.createElementNS(svg_xmlns, 'g');
-        svg_element.appendChild(this.group);
-        this.group.addEventListener('mousedown', function (e) {
-            self.group.parentNode.appendChild(self.group); // move to top
-            self.drag_offset = [ self.node.geometry.x - e.screenX, self.node.geometry.y - e.screenY ]; 
-            self.group.setAttribute('class', 'node drag');
-            self.edges_in.forEach(function (de) { if (de) de.spline.setAttribute('class', 'edge drag') });
-            self.edges_out.forEach(function (de) { if (de) de.spline.setAttribute('class', 'edge drag') });
-        });
-        function end_drag() {
-            self.drag_offset = null;
-            self.group.setAttribute('class', 'node');
-            self.edges_in.forEach(function (de) { if (de) de.spline.setAttribute('class', 'edge') });
-            self.edges_out.forEach(function (de) { if (de) de.spline.setAttribute('class', 'edge') });
+    Port.prototype.update = function() {
+        this.edges.forEach(function (e) { e.update() });
+    }
+
+    Port.prototype.get_geometry = function() {
+        return {
+            x: this.node.geometry.x + this.offset_x,
+            y: this.node.geometry.y + this.offset_y
         }
-        this.group.addEventListener('mouseup', end_drag);
-        this.group.addEventListener('mouseleave', end_drag);
-        this.group.addEventListener('mousemove', function (e) {
-            if (self.drag_offset) {
-                self.node.geometry.x = self.drag_offset[0] + e.screenX;
-                self.node.geometry.y = self.drag_offset[1] + e.screenY;
-                self.update_position();
-            } 
-        });
     }
 
-    DisplayNode.prototype.create_edges = function (svg_element) {
-        if (!this.node.connect) return;
-        this.node.connect.forEach(function (other_node_port, this_port) {
-            if (other_node_port) {
-                var other = display_nodes[other_node_port[0]];
-                var other_port = other_node_port[1];
-             
-                var edge = new DisplayEdge();
-                edge.create_spline(svg_element);
-                this.edges_in[this_port] = edge;
-                other.edges_out[other_port] = edge;
-            }
-        }, this);
-        this.edges_out = this.node.outputs.map(function (output, n) {
-            return null;
-        });
+    Port.prototype.create_edge = function(other) {
+        var edge = new Edge(this, other);
+        this.edges.push(edge);
+        other.edges.push(edge);
+        edge.init(this.node.prog.svg_element);
     }
 
-    DisplayNode.prototype.create_text = function () {
-        var rect = document.createElementNS(svg_xmlns, 'rect');
-        rect.setAttribute('class', 'node');
-        this.group.appendChild(rect);
-        var strings = [ 
-            this.node.inputs.map(function (x) { return x.label }),
-            [ this.node.label ],
-            this.node.outputs.map(function (x) { return x.label })
-        ].filter(function (ss) { return ss.length > 0 });
+    // NODE
 
-        var texts = strings.map(function (ss) { 
-            return ss.map(function (s) {
-                var text = document.createElementNS(svg_xmlns, 'text');
-                text.setAttribute('text-anchor', 'middle');
-                text.setAttribute('alignment-baseline', 'middle');
-                text.textContent = s;
-                this.group.appendChild(text);
-                return text;
-            }, this);
+    var Node = function(prog, json, num) {
+        this.prog = prog;
+        this.json = json;
+        this.input_ports = (json.inputs || []).map(function (p, n) {
+            return new Port(this, p, 150*(n+1)/(json.inputs.length+1), 0);
         }, this);
+        this.output_ports = (json.outputs || []).map(function (p, n) {    
+            return new Port(this, p, 150*(n+1)/(json.outputs.length+1), 50);
+        }, this); 
+        this.geometry = { x: (num % 4) * 200 + 50, y: (num >> 2) * 100 + 50 };
+    };
 
-        var line_height = max(texts.map(function (ts) {
-            return ts.length ? max(ts.map(function (t) { return t.getBBox().height + 5; })) : 0; 
-        }));
+    Node.prototype.update = function() {
+        var translate = 'translate(' + this.geometry.x + ',' + this.geometry.y + ')';
+        this.svg_group.setAttribute('transform', translate);
+        this.input_ports.forEach(function (p) { p.update(); });
+        this.output_ports.forEach(function (p) { p.update(); });
+    }
 
-        var max_widths = texts.map(function (ts) {
-            return ts.length ? max(ts.map(function (t) { return t.getBBox().width + 10; })) : 0;
-        });
-        this.width = max(max_widths.map(function(w, i) { return w * texts[i].length }));
-        this.height = line_height * texts.length;
-
-        rect.setAttribute('width', this.width);
-        rect.setAttribute('height', this.height);
+    Node.prototype.init_drag = function (e) {
+        this.svg_group.parentNode.appendChild(this.svg_group); // move to top
+        this.svg_group.setAttribute('class', 'node drag');
+            
+        var drag_offset_x = this.geometry.x - e.screenX;
+        var drag_offset_y = this.geometry.y - e.screenY;
         
-        texts.forEach(function (ts, i) {
-            ts.forEach(function (t, j) {
-                t.setAttribute('x', (this.width / ts.length / 2) * (2 * j + 1));
-                t.setAttribute('y', (i+0.5) * line_height);
-            }, this);
+        var drag_move = function (e) {
+            this.geometry.x = drag_offset_x + e.screenX;
+            this.geometry.y = drag_offset_y + e.screenY;
+            this.update();
+            e.preventDefault();
+        }.bind(this);
+
+        var drag_end = function (e) {
+            this.svg_group.removeEventListener('mousemove', drag_move);
+            this.svg_group.removeEventListener('mouseup', drag_end);
+            this.svg_group.removeEventListener('mouseleave', drag_end);
+            this.svg_group.setAttribute('class', 'node');
+            e.preventDefault();
+        }.bind(this);
+        
+        this.svg_group.addEventListener('mousemove', drag_move);
+        this.svg_group.addEventListener('mouseup', drag_end);
+        this.svg_group.addEventListener('mouseleave', drag_end);
+    }
+
+    Node.prototype.init_port = function (port) {
+        port.init(this.svg_group);
+    }
+
+    Node.prototype.init = function(svg_element) {
+        this.svg_group = document.createElementNS(svg_xmlns, 'g');
+        this.svg_group.setAttribute('class', 'node');
+        svg_element.appendChild(this.svg_group);
+        this.svg_rect = document.createElementNS(svg_xmlns, 'rect');
+        this.svg_group.appendChild(this.svg_rect);
+
+        this.svg_label = document.createElementNS(svg_xmlns, 'text');
+        this.svg_label.textContent = this.json.label;
+        this.svg_label.setAttribute('x', 75);
+        this.svg_label.setAttribute('y', 25);
+        this.svg_group.appendChild(this.svg_label);
+        
+        this.svg_group.addEventListener('mousedown', this.init_drag.bind(this));
+        
+        this.update();
+
+        this.input_ports.forEach(this.init_port, this);
+        this.output_ports.forEach(this.init_port, this);
+    }
+
+    // PROG
+
+    function Prog(json) {
+        this.nodes = json.map(function (n, num) {
+            return new Node(this, n, num);
         }, this);
     }
 
-    var svg = document.createElementNS(svg_xmlns, 'svg');
-    svg.setAttribute('height', '100%');
-    svg.setAttribute('width', '100%');
-    document.body.appendChild(svg);
+    Prog.prototype.node_init = function (node) {
+        node.init(this.svg_element);
+    }
 
-    var display_nodes = nodes.map(function (node) {
-        var display_node = new DisplayNode(node);
-        display_node.create_group(svg);
-        display_node.create_text();
-        return display_node;
-    });
+    Prog.prototype.init = function(html_element) {
+        this.svg_element = document.createElementNS(svg_xmlns, 'svg');
+        this.svg_element.setAttribute('height', '100%');
+        this.svg_element.setAttribute('width', '100%');
+        html_element.appendChild(this.svg_element);
 
-    display_nodes.forEach(function (dnode) {
-        dnode.create_edges(svg);
-    });
+        this.nodes.forEach(this.node_init, this);
+    
+        function new_node() {
+            var node = new Node({label: "Foo",inputs: ['a','b'], outputs: ['c']}, this.nodes.length);
+            this.nodes.push(node);
+            node.init(this.svg_element);
+        }
 
-    display_nodes.forEach(function (dnode) {
-        dnode.update_position();
-    });
+        this.svg_element.addEventListener('dblclick', new_node.bind(this));
+    }
 
-    svg.addEventListener('dblclick', function (e) {
-        var node = { label: 'Foo', inputs: [], outputs: [], geometry: { x: e.screenX, y: e.screenY } };
-        nodes.push(node);
-        var display_node = new DisplayNode(node);
-        display_node.create_group(svg);
-        display_node.create_text();
-        display_node.update_position();
+    ajax_get('builtins.json', function (data) {
+        var json = JSON.parse(data);
+        var prog = new Prog(json);
+        prog.init(document.body);
+
+        prog.nodes[2].input_ports[0].create_edge(
+            prog.nodes[0].output_ports[0]
+        );
+
+        prog.nodes[3].input_ports[0].create_edge(
+            prog.nodes[0].output_ports[1]
+        );
+
+
     });
 }
