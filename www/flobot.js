@@ -24,13 +24,13 @@ window.onload = function () {
     // EDGE
    
     var Edge = function(port_src, port_dst) {
-        if (port_src && !port_dst) port_dst = port_src;
-        if (port_dst && !port_src) port_src = port_dst;
+        this.port_src = port_src || port_dst;
+        this.port_dst = port_dst || port_src;
 
-        this.x1 = port_src.offset_x + port_src.node.geometry.x;
-        this.y1 = port_src.offset_y + port_src.node.geometry.y;
-        this.x2 = port_dst.offset_x + port_dst.node.geometry.x;
-        this.y2 = port_dst.offset_y + port_dst.node.geometry.y;
+        this.x1 = this.port_src.offset_x + this.port_src.node.geometry.x;
+        this.y1 = this.port_src.offset_y + this.port_src.node.geometry.y;
+        this.x2 = this.port_dst.offset_x + this.port_dst.node.geometry.x;
+        this.y2 = this.port_dst.offset_y + this.port_dst.node.geometry.y;
     }
 
     Edge.prototype.update = function() {
@@ -68,6 +68,11 @@ window.onload = function () {
         this.svg_spline.remove();
     }
 
+    Edge.prototype.delete = function() {
+        this.port_src.edges = this.port_src.edges.filter(function (e) { return e != this }, this);
+        this.port_dst.edges = this.port_dst.edges.filter(function (e) { return e != this }, this);
+    }
+
     // PORT
 
     var Port = function(node, label, is_input, offset_x, offset_y) {
@@ -85,22 +90,19 @@ window.onload = function () {
         new_edge.init(this.node.prog.svg_element);
         this.svg_circle.setAttribute('class', 'port drag');
         new_edge.svg_spline.setAttribute('class', 'edge drag');
-        
+        var new_target = null;
         return {
-            drag: function(delta_x, delta_y) {
+            drag: function(target, delta_x, delta_y) {
                 if (this.is_input) new_edge.move_src(delta_x, delta_y);
                 else new_edge.move_dst(delta_x, delta_y);
             }.bind(this),
             done: function(target) {
                 this.svg_circle.setAttribute('class', 'port');
-                if (target && target.edges) {
+                if (target && target.edges && target.is_input != this.is_input && target.node != this.node) {
                     if (target.is_input) target.remove_edges();
-                    this.edges.push(new_edge);
-                    target.edges.push(new_edge);
-                    new_edge.svg_spline.setAttribute('class', 'edge');
-                } else {
-                    new_edge.deinit();
-                }    
+                    this.create_edge(target);
+                }
+                new_edge.deinit();    
             }.bind(this)    
         }
     }
@@ -134,14 +136,15 @@ window.onload = function () {
     }
 
     Port.prototype.remove_edges = function() {
-        this.edges.forEach(function (e) { e.deinit(); });
-        this.edges = [];
+        this.edges.forEach(function (e) { e.deinit(); e.delete(); });
     }
 
     Port.prototype.create_edge = function(other) {
-        var edge = new Edge(this, other);
+        var edge = this.is_input ? new Edge(other, this) : new Edge(this, other);
         this.edges.push(edge);
         other.edges.push(edge);
+        if (this.is_input) this.node.reorder(other.node);
+        else other.node.reorder(this.node);
         edge.init(this.node.prog.svg_element);
         edge.update();
     }
@@ -157,8 +160,25 @@ window.onload = function () {
         this.output_ports = (json.outputs || []).map(function (p, n) {    
             return new Port(this, p, false, 150*(n+1)/(json.outputs.length+1), 50);
         }, this); 
+        this.order = this.input_ports.length == 0 ? 1 : 0;
         this.geometry = json.geometry || { x: 100, y: 100 };
     };
+
+    Node.prototype.reorder = function(other) {
+        if (this.order <= other.order) {
+            this.order = other.order + 1;
+            this.output_ports.forEach(function (p) {
+                p.edges.forEach(function (e) {
+                    if (e.port_dst.node.order <= other.order) {
+                        e.deinit();
+                        e.delete();
+                    } else {
+                        e.port_dst.node.reorder(this);
+                    }
+                }, this);   
+            }, this);
+        }
+    }
 
     Node.prototype.update = function() {
         var translate = 'translate(' + this.geometry.x + ',' + this.geometry.y + ')';
@@ -172,7 +192,7 @@ window.onload = function () {
         this.svg_group.setAttribute('class', 'node drag');
     
         return {
-            drag: function(delta_x, delta_y) {
+            drag: function(target, delta_x, delta_y) {
                 this.geometry.x += delta_x;
                 this.geometry.y += delta_y;
                 this.update();
@@ -243,7 +263,7 @@ window.onload = function () {
         this.nodes.forEach(this.node_init, this);
     
         function new_node() {
-            var node = new Node(this, {label: "Difference", inputs: ['+','-'], outputs: ['=']}, this.nodes.length);
+            var node = new Node(this, {id: "SUB", label: "Difference", inputs: ['+','-'], outputs: ['=']}, this.nodes.length);
             this.nodes.push(node);
             node.init(this.svg_element);
         }
@@ -266,6 +286,7 @@ window.onload = function () {
         function drag_move(e) {
             if (drag_target) {
                 drag_target.drag(
+                    e.target._target,
                     e.screenX - drag_offset_x,
                     e.screenY - drag_offset_y
                 )
@@ -289,10 +310,35 @@ window.onload = function () {
         this.svg_element.addEventListener('mouseleave', drag_end.bind(this));
     }
 
+    Prog.prototype.serialize = function() {
+        var nodes = this.nodes.filter(function (n) { return n.order > 0 });
+        nodes.sort(function (a, b) { return a.order - b.order; });
+        var port_id = 1;
+        nodes.forEach(function (n) {
+            n.output_ports.forEach(function (p) {
+                p.port_id = p.edges.length ? port_id++ : -1;
+            });
+        });
+        
+        return nodes.map(function (n) {
+            return n.json.id + " " +
+                n.input_ports.map(function (p) {
+                    return p.edges.length ? p.edges[0].port_src.port_id : -1;
+                }).join(" ") + " " +
+                n.output_ports.map(function (p) {
+                    return p.port_id;
+                }).join(" ");        
+        }).join("\n");
+
+    }
     ajax_get('builtins.json', function (data) {
         var json = JSON.parse(data);
         var prog = new Prog(json);
         prog.init(document.body);
-
+        setInterval(function () {
+            var s = prog.serialize();
+            document.getElementById('debug').textContent = s;
+        }, 1000);
     });
 }
+    
