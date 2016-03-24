@@ -10,6 +10,10 @@ window.onload = function () {
         return numbers.reduce(function (a,b) { return a+b; }, 0);
     }
 
+    function to_hex_byte(num) {
+        return ((1*num)+256).toString(16).substr(1);
+    }
+
     function ajax_get(url, callback) {
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {
@@ -159,7 +163,7 @@ window.onload = function () {
         }, this);
         this.output_ports = (json.outputs || []).map(function (p, n) {    
             return new Port(this, p, false, 150*(n+1)/(json.outputs.length+1), 50);
-        }, this); 
+        }, this);
         this.order = this.input_ports.length == 0 ? 1 : 0;
         this.geometry = json.geometry || { x: 100, y: 100 };
     };
@@ -254,6 +258,8 @@ window.onload = function () {
         node.init(this.svg_element);
     }
 
+    var op_nodes_json = [];
+
     Prog.prototype.init = function(html_element) {
         this.svg_element = document.createElementNS(svg_xmlns, 'svg');
         this.svg_element.setAttribute('height', '100%');
@@ -263,7 +269,8 @@ window.onload = function () {
         this.nodes.forEach(this.node_init, this);
     
         function new_node() {
-            var node = new Node(this, {id: "SUB", label: "Difference", inputs: ['+','-'], outputs: ['=']}, this.nodes.length);
+            var node_json = op_nodes_json[Math.floor(Math.random() * op_nodes_json.length)];
+            var node = new Node(this, node_json);
             this.nodes.push(node);
             node.init(this.svg_element);
         }
@@ -316,23 +323,25 @@ window.onload = function () {
         var port_id = 1;
         nodes.forEach(function (n) {
             n.output_ports.forEach(function (p) {
-                p.port_id = p.edges.length ? port_id++ : -1;
+                p.port_id = p.edges.length ? port_id++ : 0;
             });
         });
         
         return nodes.map(function (n) {
-            return n.json.id + " " +
+            return to_hex_byte(n.json.op) + " " +
                 n.input_ports.map(function (p) {
-                    return p.edges.length ? p.edges[0].port_src.port_id : -1;
+                    return to_hex_byte(p.edges.length ? p.edges[0].port_src.port_id || 0 : 0);
                 }).join(" ") + " " +
                 n.output_ports.map(function (p) {
-                    return p.port_id;
+                    return to_hex_byte(p.port_id || 0);
                 }).join(" ");        
         }).join("\n");
 
     }
-    ajax_get('builtins.json', function (data) {
+    
+    ajax_get('opcodes.json', function (data) {
         var json = JSON.parse(data);
+        op_nodes_json = json.filter(function (nj) { return !nj.single });
         var prog = new Prog(json);
         prog.init(document.body);
         setInterval(function () {
