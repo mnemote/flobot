@@ -1,0 +1,58 @@
+[
+    {
+        "op": 255,
+        "label": "Line Sensor",
+        "single": true,
+        "outputs": ["L", "R"]
+    }, {
+        "op": 254,
+        "label": "Ambient Light",
+        "single": true,
+        "outputs": [""]
+    }, {
+        "op": 253,
+        "label": "Motor (Left)",
+        "single": true,
+        "inputs": [""]
+    }, {
+        "op": 252,
+        "label": "Motor (Right)",
+        "single": true,
+        "inputs": [""]
+    }, {
+        "op": 251,
+        "label": "Add",
+        "inputs": ["", ""],
+        "outputs": [""]
+    }, {
+        "op": 250,
+        "label": "Subtract",
+        "inputs": ["+", "-"],
+        "outputs": [""]
+    }, {
+        "op": 249,
+        "label": "Multiply",
+        "inputs": ["", ""],
+        "outputs": [""]
+    }, {
+        "op": 248,
+        "label": "Divide",
+        "inputs": ["", "/"],
+        "outputs": [""]
+    }, {
+        "op": 247,
+        "label": "Maximum",
+        "inputs": ["",""],
+        "outputs": [""]
+    }, {
+        "op": 246,
+        "label": "Minimum",
+        "inputs": ["",""],
+        "outputs": [""]
+    }, {
+	"op": 245,
+        "label": "Flip-flop",
+        "inputs": ["S", "R"],
+        "outputs": ["Q", "!Q"]
+    }
+]

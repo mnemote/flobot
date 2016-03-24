@@ -6,53 +6,38 @@
 #include <stdint.h>
 #include <stddef.h>
 
-typedef int16_t virtual_port_t;
+// XXX This has to be kept aligned with "opcodes.json" which is 
+//     not great, but my cpp-fu is not sufficient to think of a 
+//     better way
 
-typedef struct virtual_func_s {
-    uint8_t opcode;
-    char *json_data;
-    void(*func_call)(virtual_port_t[], size_t);
-} virtual_func_t;
-
+typedef enum opcodes_e {
+    OP_VAL16 = 255,
+    OP_ADD = 253,
+    OP_SUB = 252,
+    OP_MUL = 251,
+    OP_DIV = 250,
+    OP_MAX = 249,
+    OP_MIN = 248,
+    OP_FLIPFLOP = 247,
+    OP_LINE = 246,
+    OP_LIGHT = 245,
+    OP_MLEFT = 244,
+    OP_MRIGHT = 243,
+} opcodes_t;
     
-typedef enum virtual_inst_e {
-    NOP,
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    CMP,
-    DIF
-} virtual_inst_t;
-
-
-typedef struct __attribute__((packed)) virtual_code_s { 
-    virtual_inst_t inst:8;
-    unsigned int port_a:12;
-    unsigned int port_b:12;
-} virtual_code_t;    
-
 typedef struct virtual_prog_s {
-    uint16_t n_inputs;
-    uint16_t n_outputs;
-    uint16_t n_ports;
-    uint16_t n_codes;
-
-    virtual_port_t *ports;
-    virtual_code_t *codes;
+    uint8_t codes[256];
+    uint32_t ports[256];
 } virtual_prog_t;
 
 
-virtual_prog_t *virtual_init(size_t n_inputs, size_t n_outputs);
+virtual_prog_t *virtual_init();
 
 void virtual_load_bin(virtual_prog_t *prog, uint8_t *buf, size_t bufsiz);
 
 void virtual_load_hex(virtual_prog_t *prog, char *buf, size_t bufsiz);
 
 void virtual_exec(virtual_prog_t *prog);
-
-void virtual_set_input(virtual_prog_t *prog, size_t input_num, virtual_port_t val);
-virtual_port_t virtual_get_output(virtual_prog_t *prog, size_t output_num);
 
 size_t virtual_dump_bin_size(virtual_prog_t *prog);
 
