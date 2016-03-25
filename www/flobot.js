@@ -270,9 +270,10 @@ window.onload = function () {
 
         this.nodes.forEach(this.node_init, this);
     
-        function new_node() {
+        function new_node(e) {
             var node_json = op_nodes_json[Math.floor(Math.random() * op_nodes_json.length)];
             var node = new Node(this, node_json);
+            node.geometry.x = e.screenX - 50; node.geometry.y = e.screenY - 25;
             this.nodes.push(node);
             node.init(this.svg_element);
         }
