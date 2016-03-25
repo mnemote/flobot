@@ -28,3 +28,9 @@ Live Demo
 There's no robot attached, but you can see the GUI working here:
 
 * `Flobot live demo <https://rawgit.com/mnemote/flobot/master/www/index.html>`_
+
+Contrived Example Screenshot
+----------------------------
+.. image:: doc/img/contrived-example.png
+    :width: 90%
+    :class: center
