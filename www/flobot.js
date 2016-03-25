@@ -254,7 +254,9 @@ window.onload = function () {
         }, this);
     }
 
-    Prog.prototype.node_init = function (node) {
+    Prog.prototype.node_init = function (node, n) {
+        node.geometry.x = (n % 4) * 200 + 50;
+        node.geometry.y = Math.floor(n / 4) * 150 + 50;
         node.init(this.svg_element);
     }
 
