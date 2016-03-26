@@ -1,56 +1,76 @@
 [
+  
     {
-        "op": 255,
-        "label": "Line Sensor",
-        "single": true,
-        "outputs": ["L", "R"]
+        "label": "Range Sensor",
+        "op": 240,
+        "outputs": [
+            { "label": "d" }
+        ]
     }, {
-        "op": 254,
+        "label": "Line Sensor",
+        "op": 239,
+        "outputs": [
+            { "label": "L" },
+            { "label": "R" }
+        ]
+    }, {
         "label": "Ambient Light",
-        "single": true,
-        "outputs": [""]
+        "op": 238,
+        "outputs": [
+            { }
+        ]
+    }, {
+        "label": "Motor (Left)",
+        "op": 220,
+        "inputs": [
+            { }
+        ]
+    }, {
+        "label": "Motor (Right)",
+        "op": 219,
+        "inputs": [
+            { }
+        ]
+    }, {
+        "label": "LED",
+        "op": 218,
+        "inputs": [
+            { "label": "R" },
+            { "label": "G" },
+            { "label": "B" }
+        ]
     }, {
         "op": 253,
-        "label": "Motor (Left)",
-        "single": true,
-        "inputs": [""]
-    }, {
-        "op": 252,
-        "label": "Motor (Right)",
-        "single": true,
-        "inputs": [""]
-    }, {
-        "op": 251,
         "label": "Add",
         "inputs": ["", ""],
         "outputs": [""]
     }, {
-        "op": 250,
+        "op": 252,
         "label": "Subtract",
         "inputs": ["+", "-"],
         "outputs": [""]
     }, {
-        "op": 249,
+        "op": 251,
         "label": "Multiply",
         "inputs": ["", ""],
         "outputs": [""]
     }, {
-        "op": 248,
+        "op": 250,
         "label": "Divide",
         "inputs": ["", "/"],
         "outputs": [""]
     }, {
-        "op": 247,
+        "op": 249,
         "label": "Maximum",
         "inputs": ["",""],
         "outputs": [""]
     }, {
-        "op": 246,
+        "op": 248,
         "label": "Minimum",
         "inputs": ["",""],
         "outputs": [""]
     }, {
-	"op": 245,
+	"op": 247,
         "label": "Flip-flop",
         "inputs": ["S", "R"],
         "outputs": ["Q", "!Q"]

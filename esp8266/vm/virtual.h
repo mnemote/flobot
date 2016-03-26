@@ -19,10 +19,6 @@ typedef enum opcodes_e {
     OP_MAX = 249,
     OP_MIN = 248,
     OP_FLIPFLOP = 247,
-    OP_LINE = 246,
-    OP_LIGHT = 245,
-    OP_MLEFT = 244,
-    OP_MRIGHT = 243,
 } opcodes_t;
     
 typedef struct virtual_prog_s {

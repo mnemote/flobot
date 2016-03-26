@@ -14,6 +14,9 @@ window.onload = function () {
         return ((1*num)+256).toString(16).substr(1);
     }
 
+    var ports_available = [];
+    for (var i=1; i<256; i++) ports_available.push(i);
+
     function ajax_get(url, callback) {
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {
@@ -75,13 +78,19 @@ window.onload = function () {
     Edge.prototype.delete = function() {
         this.port_src.edges = this.port_src.edges.filter(function (e) { return e != this }, this);
         this.port_dst.edges = this.port_dst.edges.filter(function (e) { return e != this }, this);
+        this.port_dst.port_id = null;
+        if (this.port_src.edges.length == 0) {
+            ports_available.unshift(this.port_src.port_id);
+            this.port_src.port_id = null;
+        }
+        
     }
 
     // PORT
 
-    var Port = function(node, label, is_input, offset_x, offset_y) {
+    var Port = function(node, json, is_input, offset_x, offset_y) {
         this.node = node;
-        this.label = label;
+        this.label = json.label;
         this.is_input = is_input;
         this.offset_x = offset_x;
         this.offset_y = offset_y;
@@ -102,9 +111,14 @@ window.onload = function () {
             }.bind(this),
             done: function(target) {
                 this.svg_circle.setAttribute('class', 'port');
-                if (target && target.edges && target.is_input != this.is_input && target.node != this.node) {
-                    if (target.is_input) target.remove_edges();
-                    this.create_edge(target);
+                if (target && target.edges && target.node != this.node) {
+                    if (this.is_input && !target.is_input) {
+                        this.remove_edges();
+                        target.create_edge(this);
+                    } else if (target.is_input && !this.is_input) {
+                        target.remove_edges();
+                        this.create_edge(target);
+                    }
                 }
                 new_edge.deinit();    
             }.bind(this)    
@@ -144,11 +158,15 @@ window.onload = function () {
     }
 
     Port.prototype.create_edge = function(other) {
-        var edge = this.is_input ? new Edge(other, this) : new Edge(this, other);
+        // 'this' is an output port.  'other' is an input port
+        var edge = new Edge(this, other);
         this.edges.push(edge);
         other.edges.push(edge);
-        if (this.is_input) this.node.reorder(other.node);
-        else other.node.reorder(this.node);
+        
+        if (!this.port_id) this.port_id = ports_available.shift();
+        other.port_id = this.port_id;
+        
+        other.node.reorder(this.node);
         edge.init(this.node.prog.svg_element);
         edge.update();
     }
@@ -164,11 +182,20 @@ window.onload = function () {
         this.output_ports = (json.outputs || []).map(function (p, n) {    
             return new Port(this, p, false, 150*(n+1)/(json.outputs.length+1), 50);
         }, this);
-        this.order = this.input_ports.length == 0 ? 1 : 0;
+        this.order = 0;
         this.geometry = json.geometry || { x: 100, y: 100 };
     };
 
+    Node.prototype.is_active = function() {
+        if (this.input_ports.length) {
+            return this.input_ports.some(function (p) { return p.edges.length > 0 });
+        } else {
+            return this.output_ports.some(function (p) { return p.edges.length > 0 });
+        }
+    }
+    
     Node.prototype.reorder = function(other) {
+        if (other.order < 1) other.order = 1;
         if (this.order <= other.order) {
             this.order = other.order + 1;
             this.output_ports.forEach(function (p) {
@@ -321,19 +348,13 @@ window.onload = function () {
     }
 
     Prog.prototype.serialize = function() {
-        var nodes = this.nodes.filter(function (n) { return n.order > 0 });
+        var nodes = this.nodes.filter(function (n) { return n.is_active() });
         nodes.sort(function (a, b) { return a.order - b.order; });
-        var port_id = 1;
-        nodes.forEach(function (n) {
-            n.output_ports.forEach(function (p) {
-                p.port_id = p.edges.length ? port_id++ : 0;
-            });
-        });
         
         return nodes.map(function (n) {
-            return to_hex_byte(n.json.op) + " " +
+            return "(" + n.order + ") " + to_hex_byte(n.json.op) + " " +
                 n.input_ports.map(function (p) {
-                    return to_hex_byte(p.edges.length ? p.edges[0].port_src.port_id || 0 : 0);
+                    return to_hex_byte(p.port_id || 0);
                 }).join(" ") + " " +
                 n.output_ports.map(function (p) {
                     return to_hex_byte(p.port_id || 0);

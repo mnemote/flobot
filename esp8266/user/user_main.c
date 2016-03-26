@@ -6,9 +6,15 @@ I'll add bits back in as I need them ... */
 #include "httpdespfs.h"
 #include "espfs.h"
 #include "webpages-espfs.h"
+#include "../vm/virtual.h"
+#include "cgi.h" 
+
+virtual_prog_t *VM;
 
 HttpdBuiltInUrl builtInUrls[]={
 	{"/", cgiRedirect, "/index.html"},
+	{"/load/bin", cgiLoadBin, NULL},
+	{"/load/hex", cgiLoadHex, NULL},
 	{"*", cgiEspFsHook, NULL},
 	{NULL, NULL, NULL}
 };
