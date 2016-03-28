@@ -189,6 +189,7 @@ window.onload = function () {
         other.node.reorder(this.node);
         edge.init(this.node.prog.svg_element);
         edge.update();
+
     }
 
     // NODE
@@ -309,6 +310,14 @@ window.onload = function () {
 
     var op_nodes_json = [];
 
+    Prog.prototype.upload = function() {
+        var s = this.serialize();
+        ajax_post('/load/hex', s.replace(/\s+/g, ''), function (status,text) {
+            s += "\n\n" + status + "\n" + (status == 200 ? text : '');
+            document.getElementById('debug').textContent = s;
+        });
+    }
+    
     Prog.prototype.init = function(html_element) {
         this.svg_element = document.createElementNS(svg_xmlns, 'svg');
         this.svg_element.setAttribute('height', '100%');
@@ -368,6 +377,8 @@ window.onload = function () {
                 }
                 drag_target.done(target._target);
                 drag_target = null;
+
+                this.upload();
             }
         }
 
@@ -413,13 +424,7 @@ window.onload = function () {
         op_nodes_json = json.filter(function (nj) { return !nj.single });
         var prog = new Prog(json);
         prog.init(document.body);
-        setInterval(function () {
-            var s = prog.serialize();
-            ajax_post('/load/hex', s.replace(/\s+/g, ''), function (status,text) {
-                s += "\n\n" + status + "\n" + (status == 200 ? text : '');
-                document.getElementById('debug').textContent = s;
-            });
-        }, 1000);
     });
+
 }
     
