@@ -85,10 +85,11 @@ window.onload = function () {
         this.update();
     }
 
-    Edge.prototype.init = function(svg_element) {
+    Edge.prototype.init = function(svg_parent) {
+        this.svg_parent = svg_parent;
         this.svg_spline = document.createElementNS(svg_xmlns, 'path');
         this.svg_spline.setAttribute('class', 'edge');
-        svg_element.insertBefore(this.svg_spline, svg_element.firstChild);
+        this.svg_parent.insertBefore(this.svg_spline, svg_parent.firstChild);
     }   
     
     Edge.prototype.deinit = function() {
@@ -146,6 +147,7 @@ window.onload = function () {
     }
 
     Port.prototype.init = function(svg_group) {
+        this.svg_group = svg_group;
         this.svg_circle = document.createElementNS(svg_xmlns, 'circle');
         this.svg_circle.setAttribute('class', 'port');
         this.svg_circle.setAttribute('cx', this.offset_x);
@@ -189,7 +191,21 @@ window.onload = function () {
         other.node.reorder(this.node);
         edge.init(this.node.prog.svg_element);
         edge.update();
+    }
 
+    Port.prototype.show_value = function(value) {
+        if (!this.svg_value) {
+            this.svg_value = document.createElementNS(svg_xmlns, 'text');
+            this.svg_value.setAttribute('class', 'edge');
+            this.svg_value.setAttribute('x', this.offset_x);
+            this.svg_value.setAttribute('y', this.offset_y + 30);
+            this.svg_group.appendChild(this.svg_value);
+        }
+        this.svg_value.textContent = value;
+    }
+
+    Port.prototype.hide_value = function() {
+        if (this.svg_value) this.svg_value.remove();
     }
 
     // NODE
@@ -220,6 +236,7 @@ window.onload = function () {
         if (this.order <= other.order) {
             this.order = other.order + 1;
             this.output_ports.forEach(function (p) {
+                if (!p.port_id) p.port_id = ports_available.shift();
                 p.edges.forEach(function (e) {
                     if (e.port_dst.node.order <= other.order) {
                         e.deinit();
@@ -312,10 +329,29 @@ window.onload = function () {
 
     Prog.prototype.upload = function() {
         var s = this.serialize();
-        ajax_post('/load/hex', s.replace(/\s+/g, ''), function (status,text) {
-            s += "\n\n" + status + "\n" + (status == 200 ? text : '');
-            document.getElementById('debug').textContent = s;
-        });
+        document.getElementById('debug').textContent = s;
+        ajax_post('/load/hex', s.replace(/\s+/g, ''), this.update.bind(this));
+    }
+
+    Prog.prototype.update = function (status,text) {
+        if (status == 200) {
+            var ports_dict = {};
+            var pp = text.split(/\s+/);
+            for (var i=0; i<pp.length; i+=2) {
+                var val = parseInt(pp[i+1], 16);
+                if (val > 0x7FFF) val -= 0x10000;
+                ports_dict[1*pp[i]] = val / 100;
+            }
+            this.nodes.forEach(function (n) {
+                n.output_ports.forEach(function (p) {
+                    if (p.port_id && ports_dict[p.port_id])
+                        p.show_value(ports_dict[p.port_id]);
+                }, this);
+            }, this);
+        }
+
+        var s = "\n\n" + status + "\n" + (status == 200 ? text : '');
+        document.getElementById('debug').textContent += s;
     }
     
     Prog.prototype.init = function(html_element) {
