@@ -1,6 +1,8 @@
+@import url(https://fonts.googleapis.com/css?family=Architects+Daughter);
+
 div#main { position: relative; height: 100%;}
 
-svg { font-family: cursive; }
+svg { font-family: "Architects Daughter", "Chalkboard SE", "Comic Sans", sans-serif; }
 
 g.node { position: absolute; }
 g.node rect { stroke: blue; stroke-width: 2; fill: #DDD; cursor: move; rx: 5px; }

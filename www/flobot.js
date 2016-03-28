@@ -321,15 +321,18 @@ window.onload = function () {
         var drag_offset_y = 0;
 
         function drag_start(e) {
+            e.preventDefault();
+            if (e.changedTouches) e = e.changedTouches[0];
             if (e.target._target) {
                 drag_target = e.target._target.drag_init();
                 drag_offset_x = e.screenX;
                 drag_offset_y = e.screenY;
             }
-            e.preventDefault();
         }
 
         function drag_move(e) {
+            e.preventDefault();
+            if (e.changedTouches) e = e.changedTouches[0];
             if (drag_target) {
                 drag_target.drag(
                     e.target._target,
@@ -343,17 +346,30 @@ window.onload = function () {
         }
 
         function drag_end(e) {
+            e.preventDefault();
             if (drag_target) {
-                drag_target.done(e.target._target);
+                var target = e.target;
+                if (e.changedTouches) {
+                    target = document.elementFromPoint(
+                        e.changedTouches[0].clientX,
+                        e.changedTouches[0].clientY
+                    );
+                }
+                drag_target.done(target._target);
                 drag_target = null;
             }
-            e.preventDefault();
         }
 
         this.svg_element.addEventListener('mousedown', drag_start.bind(this));
+        this.svg_element.addEventListener('touchstart', drag_start.bind(this));
+
         this.svg_element.addEventListener('mousemove', drag_move.bind(this));
+        this.svg_element.addEventListener('touchmove', drag_move.bind(this));
+        
         this.svg_element.addEventListener('mouseup', drag_end.bind(this));
         this.svg_element.addEventListener('mouseleave', drag_end.bind(this));
+        this.svg_element.addEventListener('touchend', drag_end.bind(this));
+        this.svg_element.addEventListener('touchcancel', drag_end.bind(this));
     }
 
     Prog.prototype.serialize = function() {
