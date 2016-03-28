@@ -7,9 +7,26 @@ I'll add bits back in as I need them ... */
 #include "espfs.h"
 #include "webpages-espfs.h"
 #include "../vm/virtual.h"
-#include "cgi.h" 
 
 virtual_prog_t VM;
+
+int ICACHE_FLASH_ATTR cgiLoadBin(HttpdConnData *connData) {
+    virtual_load_bin(&VM, (uint8_t *)connData->post->buff, (unsigned)connData->post->buffLen);
+    httpdStartResponse(connData, 200);
+    httpdHeader(connData, "content-type", "text/plain");
+    httpdEndHeaders(connData);
+    httpdSend(connData, "OK", 2);
+    return HTTPD_CGI_DONE;
+}
+
+int ICACHE_FLASH_ATTR cgiLoadHex(HttpdConnData *connData) {
+    virtual_load_hex(&VM, connData->post->buff, (unsigned)connData->post->buffLen);
+    httpdStartResponse(connData, 200);
+    httpdHeader(connData, "content-type", "text/plain");
+    httpdEndHeaders(connData);
+    httpdSend(connData, "OK", 2);
+    return HTTPD_CGI_DONE;
+}
 
 HttpdBuiltInUrl builtInUrls[]={
     {"/", cgiRedirect, "/index.html"},
