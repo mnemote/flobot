@@ -8,30 +8,42 @@ I'll add bits back in as I need them ... */
 #include "webpages-espfs.h"
 #include "../vm/virtual.h"
 
-virtual_prog_t VM;
+virtual_prog_t VM = {{0}};
 
-int ICACHE_FLASH_ATTR cgiLoadBin(HttpdConnData *connData) {
-    virtual_load_bin(&VM, (uint8_t *)connData->post->buff, (unsigned)connData->post->buffLen);
+
+int ICACHE_FLASH_ATTR cgiDump(HttpdConnData *connData) {
+    char buf[2000];
+    virtual_dump_hex(&VM, buf);
+
     httpdStartResponse(connData, 200);
     httpdHeader(connData, "content-type", "text/plain");
     httpdEndHeaders(connData);
-    httpdSend(connData, "OK", 2);
+    httpdSend(connData, buf, virtual_dump_hex_size(&VM));
     return HTTPD_CGI_DONE;
+}
+
+int ICACHE_FLASH_ATTR cgiExec(HttpdConnData *connData) {
+    virtual_exec(&VM);
+    return cgiDump(connData);
+}
+
+int ICACHE_FLASH_ATTR cgiLoadBin(HttpdConnData *connData) {
+    virtual_load_bin(&VM, (uint8_t *)connData->post->buff, (unsigned)connData->post->buffLen);
+    return cgiExec(connData);
 }
 
 int ICACHE_FLASH_ATTR cgiLoadHex(HttpdConnData *connData) {
     virtual_load_hex(&VM, connData->post->buff, (unsigned)connData->post->buffLen);
-    httpdStartResponse(connData, 200);
-    httpdHeader(connData, "content-type", "text/plain");
-    httpdEndHeaders(connData);
-    httpdSend(connData, "OK", 2);
-    return HTTPD_CGI_DONE;
+    return cgiExec(connData);
 }
+
 
 HttpdBuiltInUrl builtInUrls[]={
     {"/", cgiRedirect, "/index.html"},
     {"/load/bin", cgiLoadBin, NULL},
     {"/load/hex", cgiLoadHex, NULL},
+    {"/exec", cgiExec, NULL},
+    {"/dump", cgiDump, NULL},
     {"*", cgiEspFsHook, NULL},
     {NULL, NULL, NULL}
 };

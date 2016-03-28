@@ -20,14 +20,25 @@ window.onload = function () {
     function ajax_get(url, callback) {
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {
-            if (xhr.readyState == 3) {
-                callback(xhr.responseText);
+            if (xhr.readyState == 4) {
+                callback(xhr.status, xhr.responseText);
             }
         };
         xhr.open("GET", url, true);
         xhr.send();
     }
 
+    function ajax_post(url, data, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                callback(xhr.status, xhr.responseText);
+            }
+        };
+        xhr.open("POST", url, true);
+        xhr.send(data);
+    }
+    
     function new_element(nameSpace, tagName, attributes, textContent) {
         var element = document.createElementNS(nameSpace, tagName);
         if (attributes) attributes.forEach(function (a) {
@@ -377,7 +388,7 @@ window.onload = function () {
         nodes.sort(function (a, b) { return a.order - b.order; });
         
         return nodes.map(function (n) {
-            return "(" + n.order + ") " + to_hex_byte(n.json.op) +
+            return to_hex_byte(n.json.op) +
                 n.input_ports.map(function (p) {
                     return " " + to_hex_byte(p.port_id || 0);
                 }).join("") +
@@ -388,7 +399,7 @@ window.onload = function () {
 
     }
     
-    ajax_get('opcodes.json', function (data) {
+    ajax_get('opcodes.json', function (status, data) {
         var json = JSON.parse(data);
         json.sort(function (a,b) {
             // order the output-only ones before the general ones 
@@ -404,7 +415,10 @@ window.onload = function () {
         prog.init(document.body);
         setInterval(function () {
             var s = prog.serialize();
-            document.getElementById('debug').textContent = s;
+            ajax_post('/load/hex', s.replace(/\s+/g, ''), function (status,text) {
+                s += "\n\n" + status + "\n" + (status == 200 ? text : '');
+                document.getElementById('debug').textContent = s;
+            });
         }, 1000);
     });
 }

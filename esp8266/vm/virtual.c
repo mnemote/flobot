@@ -30,7 +30,6 @@ void virtual_load_hex(virtual_prog_t *prog, char *buf, size_t bufsiz) {
     }
 }
 
-#define PORT_AT(n) (prog->ports[prog->codes[i+n]])
 
 void virtual_exec(virtual_prog_t *prog) {
 
@@ -43,60 +42,62 @@ void virtual_exec(virtual_prog_t *prog) {
 
     // XXX handle underflow / overflow / division by zero gracefully
 
+#define PORT_AT(n) (prog->ports[prog->codes[n]])
+
     int i = 0;
-    while (i < sizeof(prog->codes)) {
+    while (i < 256) {
         switch (prog->codes[i]) {
             case OP_VAL16:
-                PORT_AT(1) = ((int16_t)prog->codes[i+2] << 8) + prog->codes[i+3];
+                PORT_AT(i+1) = ((int16_t)prog->codes[i+2] << 8) + prog->codes[i+3];
                 i += 4;
                 break;
             case OP_ADD:
-                PORT_AT(3) = PORT_AT(1) + PORT_AT(2);
+                PORT_AT(i+3) = PORT_AT(i+1) + PORT_AT(i+2);
                 i += 4;
                 break;
             case OP_SUB:
-                PORT_AT(3) = PORT_AT(1) - PORT_AT(2);
+                PORT_AT(i+3) = PORT_AT(i+1) - PORT_AT(i+2);
                 i += 4;
                 break;
             case OP_MUL:
-                PORT_AT(3) = (int16_t)((int32_t)PORT_AT(1) * PORT_AT(2) / 100);
+                PORT_AT(i+3) = (int16_t)((int32_t)PORT_AT(i+1) * PORT_AT(i+2) / 100);
                 i += 4;
                 break;
             case OP_DIV:
-                PORT_AT(3) = (int16_t)((int32_t)PORT_AT(1) * 100 / PORT_AT(2));
+                PORT_AT(i+3) = (int16_t)((int32_t)PORT_AT(i+1) * 100 / PORT_AT(i+2));
                 i += 4;
                 break;
             case OP_MAX:
-                PORT_AT(3) = MAX(PORT_AT(1), PORT_AT(2));
+                PORT_AT(i+3) = MAX(PORT_AT(i+1), PORT_AT(i+2));
                 i += 4;
                 break;
             case OP_MIN:
-                PORT_AT(3) = MIN(PORT_AT(1), PORT_AT(2));
+                PORT_AT(i+3) = MIN(PORT_AT(i+1), PORT_AT(i+2));
                 i += 4;
                 break;
             case OP_FLIPFLOP:
-                if (PORT_AT(1) > PORT_AT(2)) {
-                    PORT_AT(3) = 1; PORT_AT(4) = 0;
-                } else if (PORT_AT(1) < PORT_AT(2)) {
-                    PORT_AT(3) = 0; PORT_AT(4) = 1;
-                } else if (PORT_AT(3) == 0) {
-                    PORT_AT(4) = 1;
-                } else if (PORT_AT(4) == 0) {
-                    PORT_AT(3) = 1;
+                if (PORT_AT(i+1) > PORT_AT(i+2)) {
+                    PORT_AT(i+3) = 1; PORT_AT(i+4) = 0;
+                } else if (PORT_AT(i+1) < PORT_AT(i+2)) {
+                    PORT_AT(i+3) = 0; PORT_AT(i+4) = 1;
+                } else if (PORT_AT(i+3) == 0) {
+                    PORT_AT(i+4) = 1;
+                } else if (PORT_AT(i+4) == 0) {
+                    PORT_AT(i+3) = 1;
                 }
                 i += 5;
                 break;
             case OP_RANGE:
-                PORT_AT(1) = 0;
+                PORT_AT(i+1) = 0x1111;
                 i += 2;
                 break;
             case OP_LINES:
-                PORT_AT(1) = 0;
-                PORT_AT(2) = 0;
+                PORT_AT(i+1) = 0x2222;
+                PORT_AT(i+2) = 0x3333;
                 i += 3;
                 break;
             case OP_LIGHT:
-                PORT_AT(1) = 0;
+                PORT_AT(i+1) = 0x4444;
                 i += 2;
                 break;
             case OP_MOTORL:
@@ -109,6 +110,7 @@ void virtual_exec(virtual_prog_t *prog) {
             default:
                 return;
         }
+        prog->ports[0] = 0;
     }
 }
    
@@ -125,13 +127,20 @@ void virtual_dump_bin(virtual_prog_t *prog, uint8_t *buf) {
 }
 
 size_t virtual_dump_hex_size(virtual_prog_t *prog) {
-    return 5 * 256;
+    int i, c=0;
+    for (i=0; i<256; i++) {
+        if (prog->ports[i]) c++;
+    }
+    return 8 * c;
 }
 
 void virtual_dump_hex(virtual_prog_t *prog, char *buf) {
     int i;
     for (i=0; i<256; i++) {
-        ets_sprintf(buf+5*i, "%04x ", (uint16_t)prog->ports[i]);
+        if (prog->ports[i]) {
+            ets_sprintf(buf, "%02x %04x\n", i, (uint16_t)prog->ports[i]);
+            buf += 8;
+        }
     }
 }
         
