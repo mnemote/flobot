@@ -28,6 +28,15 @@ window.onload = function () {
         xhr.send();
     }
 
+    function new_element(nameSpace, tagName, attributes, textContent) {
+        var element = document.createElementNS(nameSpace, tagName);
+        if (attributes) attributes.forEach(function (a) {
+            element.setAttribute(a[0], a[1]);
+        });
+        if (textContent) element.textContent = textContent;
+        return element;
+    }
+
     // EDGE
    
     var Edge = function(port_src, port_dst) {
@@ -266,7 +275,7 @@ window.onload = function () {
         this.svg_label.setAttribute('y', 25);
         this.svg_label._target = this;
         this.svg_group.appendChild(this.svg_label);
-        
+
         this.update();
 
         this.input_ports.forEach(this.init_port, this);
@@ -352,19 +361,28 @@ window.onload = function () {
         nodes.sort(function (a, b) { return a.order - b.order; });
         
         return nodes.map(function (n) {
-            return "(" + n.order + ") " + to_hex_byte(n.json.op) + " " +
+            return "(" + n.order + ") " + to_hex_byte(n.json.op) +
                 n.input_ports.map(function (p) {
-                    return to_hex_byte(p.port_id || 0);
-                }).join(" ") + " " +
+                    return " " + to_hex_byte(p.port_id || 0);
+                }).join("") +
                 n.output_ports.map(function (p) {
-                    return to_hex_byte(p.port_id || 0);
-                }).join(" ");        
+                    return " " + to_hex_byte(p.port_id || 0);
+                }).join("");        
         }).join("\n");
 
     }
     
     ajax_get('opcodes.json', function (data) {
         var json = JSON.parse(data);
+        json.sort(function (a,b) {
+            // order the output-only ones before the general ones 
+            // before the input-only ones ...
+            if (a.inputs && !b.inputs) return +1;
+            if (b.inputs && !a.inputs) return -1;
+            if (a.outputs && !b.outputs) return -1;
+            if (b.outputs && !a.outputs) return +1;
+            return a.op - b.op;
+        });
         op_nodes_json = json.filter(function (nj) { return !nj.single });
         var prog = new Prog(json);
         prog.init(document.body);

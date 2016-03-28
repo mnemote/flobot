@@ -11,14 +11,20 @@
 //     better way
 
 typedef enum opcodes_e {
+    OP_RANGE = 160,
+    OP_LINES = 161,
+    OP_LIGHT = 162,
+    OP_MOTORL = 176,
+    OP_MOTORR = 177,
+    OP_LEDS = 178,
+    OP_ADD = 224,
+    OP_SUB = 225,
+    OP_MUL = 226,
+    OP_DIV = 227,
+    OP_MAX = 228,
+    OP_MIN = 229,
+    OP_FLIPFLOP = 230,
     OP_VAL16 = 255,
-    OP_ADD = 253,
-    OP_SUB = 252,
-    OP_MUL = 251,
-    OP_DIV = 250,
-    OP_MAX = 249,
-    OP_MIN = 248,
-    OP_FLIPFLOP = 247,
 } opcodes_t;
     
 typedef struct virtual_prog_s {

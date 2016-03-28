@@ -1,78 +1,86 @@
 [
-  
     {
         "label": "Range Sensor",
-        "op": 240,
+        "op": 160,
         "outputs": [
             { "label": "d" }
         ]
     }, {
         "label": "Line Sensor",
-        "op": 239,
+        "op": 161,
         "outputs": [
             { "label": "L" },
             { "label": "R" }
         ]
     }, {
         "label": "Ambient Light",
-        "op": 238,
+        "op": 162,
         "outputs": [
             { }
         ]
     }, {
         "label": "Motor (Left)",
-        "op": 220,
+        "op": 176,
         "inputs": [
             { }
         ]
     }, {
         "label": "Motor (Right)",
-        "op": 219,
+        "op": 177,
         "inputs": [
             { }
         ]
     }, {
         "label": "LED",
-        "op": 218,
+        "op": 178,
         "inputs": [
             { "label": "R" },
             { "label": "G" },
             { "label": "B" }
         ]
     }, {
-        "op": 253,
+        "op": 224,
         "label": "Add",
-        "inputs": ["", ""],
-        "outputs": [""]
+        "inputs": [{}, {}],
+        "outputs": [{}]
     }, {
-        "op": 252,
+        "op": 225,
         "label": "Subtract",
-        "inputs": ["+", "-"],
-        "outputs": [""]
+        "inputs": [
+            { "label": "+" },
+            { "label": "-"}
+        ],
+        "outputs": [{}]
     }, {
-        "op": 251,
+        "op": 226,
         "label": "Multiply",
-        "inputs": ["", ""],
-        "outputs": [""]
+        "inputs": [{}, {}],
+        "outputs": [{}]
     }, {
-        "op": 250,
+        "op": 227,
         "label": "Divide",
-        "inputs": ["", "/"],
-        "outputs": [""]
+        "inputs": [{}, {}],
+        "outputs": [{}]
     }, {
-        "op": 249,
+        "op": 228,
         "label": "Maximum",
-        "inputs": ["",""],
-        "outputs": [""]
+        "inputs": [{}, {}],
+        "outputs": [ {} ]
     }, {
-        "op": 248,
+        "op": 229,
         "label": "Minimum",
-        "inputs": ["",""],
-        "outputs": [""]
+        "inputs": [ {}, {}],
+        "outputs": [ {} ]
     }, {
-	"op": 247,
+	"op": 230,
         "label": "Flip-flop",
-        "inputs": ["S", "R"],
-        "outputs": ["Q", "!Q"]
+        "inputs": [
+            { "label": "S" },
+            { "label": "R" }
+        ],
+        "outputs": [
+            { "label": "Q" },
+            { "label": "Q", "invert": true }
+        ]
     }
 ]

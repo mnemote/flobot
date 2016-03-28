@@ -1,9 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
 #include <string.h>
 #include <strings.h>
-#include <arpa/inet.h>
-#include <assert.h>
+
+int ets_sprintf(char *str, const char *format, ...)  __attribute__ ((format (printf, 2, 3)));
 
 #include "virtual.h"
 
@@ -11,10 +10,10 @@
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #define FROM_HEX(c) ('0' <= (c) && c <= '9' ? (c) - '0' : ((c) & 31) + 9)
 
-virtual_prog_t *virtual_init() {
+/*virtual_prog_t *virtual_init() {
     virtual_prog_t *prog = (virtual_prog_t *)calloc(1, sizeof(virtual_prog_t));
     return prog;
-}
+}*/
 
 void virtual_load_bin(virtual_prog_t *prog, uint8_t *buf, size_t bufsiz) {
     bzero(prog->codes, sizeof(prog->codes));
@@ -87,7 +86,11 @@ void virtual_exec(virtual_prog_t *prog) {
                 }
                 i += 5;
                 break;
-            case OP_LINE:
+            case OP_RANGE:
+                PORT_AT(1) = 0;
+                i += 2;
+                break;
+            case OP_LINES:
                 PORT_AT(1) = 0;
                 PORT_AT(2) = 0;
                 i += 3;
@@ -96,9 +99,12 @@ void virtual_exec(virtual_prog_t *prog) {
                 PORT_AT(1) = 0;
                 i += 2;
                 break;
-            case OP_MLEFT:
-            case OP_MRIGHT:
+            case OP_MOTORL:
+            case OP_MOTORR:
                 i += 2;
+                break;
+            case OP_LEDS:
+                i += 4;
                 break;
             default:
                 return;
@@ -125,10 +131,10 @@ size_t virtual_dump_hex_size(virtual_prog_t *prog) {
 void virtual_dump_hex(virtual_prog_t *prog, char *buf) {
     int i;
     for (i=0; i<256; i++) {
-        snprintf(buf+5*i, 6, "%04x ", (uint16_t)prog->ports[i]);
+        ets_sprintf(buf+5*i, "%04x ", (uint16_t)prog->ports[i]);
     }
 }
         
-void virtual_free(virtual_prog_t *prog) {
+/*void virtual_free(virtual_prog_t *prog) {
     free(prog);
-} 
+}*/ 

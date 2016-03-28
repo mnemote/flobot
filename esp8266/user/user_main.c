@@ -9,17 +9,33 @@ I'll add bits back in as I need them ... */
 #include "../vm/virtual.h"
 #include "cgi.h" 
 
-virtual_prog_t *VM;
+virtual_prog_t VM;
 
 HttpdBuiltInUrl builtInUrls[]={
-	{"/", cgiRedirect, "/index.html"},
-	{"/load/bin", cgiLoadBin, NULL},
-	{"/load/hex", cgiLoadHex, NULL},
-	{"*", cgiEspFsHook, NULL},
-	{NULL, NULL, NULL}
+    {"/", cgiRedirect, "/index.html"},
+    {"/load/bin", cgiLoadBin, NULL},
+    {"/load/hex", cgiLoadHex, NULL},
+    {"*", cgiEspFsHook, NULL},
+    {NULL, NULL, NULL}
 };
 
 void user_init(void) {
-	espFsInit((void*)(webpages_espfs_start));
-	httpdInit(builtInUrls, 80);
+    const char ssid[32] = "NotMyAP";
+    const char password[64] = "NotMyPassword";
+
+    struct station_config stationConf = {{0}};
+
+    wifi_set_opmode( STATION_MODE );
+    os_memset(stationConf.ssid, 0, 32);
+    os_memset(stationConf.password, 0, 64);
+    stationConf.bssid_set = 0;
+    os_memcpy(&stationConf.ssid, ssid, 32);
+    os_memcpy(&stationConf.password, password, 64);
+    wifi_station_set_config(&stationConf);
+    wifi_station_connect();
+
+    wifi_station_dhcpc_start();
+
+    espFsInit((void*)(webpages_espfs_start));
+    httpdInit(builtInUrls, 80);
 }

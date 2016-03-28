@@ -1,9 +1,9 @@
 # Makefile based on the esphttpd/Makefile 
 
 #SPI flash size, in K
-ESP_SPI_FLASH_SIZE_K=1024
+ESP_SPI_FLASH_SIZE_K=4096
 #0: QIO, 1: QOUT, 2: DIO, 3: DOUT
-ESP_FLASH_MODE=0
+ESP_FLASH_MODE=2
 #0: 40MHz, 1: 26MHz, 2: 20MHz, 0xf: 80MHz
 ESP_FLASH_FREQ_DIV=0
 
@@ -37,7 +37,7 @@ APPGEN		?= $(SDK_BASE)/tools/gen_appbin.py
 TARGET		= httpd
 
 # which modules (subdirectories) of the project to include in compiling
-MODULES		= user
+MODULES		= user vm
 EXTRA_INCDIR	= include libesphttpd/include
 
 # libraries used in this project, mainly provided by the SDK
@@ -169,9 +169,12 @@ $1/%.o: %.S
 	$(CC) $(INCDIR) $(MODULE_INCDIR) $(EXTRA_INCDIR) $(SDK_INCDIR) $(CFLAGS)  -c $$< -o $$@
 endef
 
-.PHONY: all checkdirs clean libesphttpd default-tgt
+.PHONY: all copyfiles checkdirs clean libesphttpd default-tgt
 
-all: checkdirs $(TARGET_OUT) $(FW_BASE)
+all: checkdirs copyfiles $(TARGET_OUT) $(FW_BASE)
+
+copyfiles:
+	cp -r ../www/* ./html
 
 libesphttpd/Makefile:
 	echo "No libesphttpd submodule found. Using git to fetch it..."
