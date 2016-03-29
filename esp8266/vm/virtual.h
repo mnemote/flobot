@@ -29,7 +29,7 @@ typedef enum opcodes_e {
     
 typedef struct virtual_prog_s {
     uint8_t codes[256];
-    uint32_t ports[256];
+    int16_t ports[256];
 } virtual_prog_t;
 
 

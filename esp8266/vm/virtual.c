@@ -1,7 +1,11 @@
 //#include <stdio.h>
+#include <c_types.h>
 #include <string.h>
 #include <strings.h>
+#include <gpio.h>
+#include <user_interface.h>
 
+// Is this really not defined *somewhere*?
 int ets_sprintf(char *str, const char *format, ...)  __attribute__ ((format (printf, 2, 3)));
 
 #include "virtual.h"
@@ -77,34 +81,58 @@ void virtual_exec(virtual_prog_t *prog) {
                 break;
             case OP_FLIPFLOP:
                 if (PORT_AT(i+1) > PORT_AT(i+2)) {
-                    PORT_AT(i+3) = 1; PORT_AT(i+4) = 0;
+                    PORT_AT(i+3) = 100; PORT_AT(i+4) = 0;
                 } else if (PORT_AT(i+1) < PORT_AT(i+2)) {
-                    PORT_AT(i+3) = 0; PORT_AT(i+4) = 1;
+                    PORT_AT(i+3) = 0; PORT_AT(i+4) = 100;
                 } else if (PORT_AT(i+3) == 0) {
-                    PORT_AT(i+4) = 1;
+                    PORT_AT(i+4) = 100;
                 } else if (PORT_AT(i+4) == 0) {
-                    PORT_AT(i+3) = 1;
+                    PORT_AT(i+3) = 100;
                 }
                 i += 5;
                 break;
             case OP_RANGE:
-                PORT_AT(i+1) = 0x1111;
+                PORT_AT(i+1) = system_adc_read() & 0xFFFF;
                 i += 2;
                 break;
             case OP_LINES:
-                PORT_AT(i+1) = 0x2222;
-                PORT_AT(i+2) = 0x3333;
+                PORT_AT(i+1) = 6000;
+                PORT_AT(i+2) = -6000;
                 i += 3;
                 break;
             case OP_LIGHT:
-                PORT_AT(i+1) = 0x4444;
+                PORT_AT(i+1) = 600;
                 i += 2;
                 break;
             case OP_MOTORL:
+                if (PORT_AT(i+1) >= 100) {
+                    GPIO_OUTPUT_SET(4,1);
+                    GPIO_OUTPUT_SET(5,0);
+                } else if (PORT_AT(i+1) <= -100) {
+                    GPIO_OUTPUT_SET(4,0);
+                    GPIO_OUTPUT_SET(5,1);
+                } else {
+                    GPIO_OUTPUT_SET(4,0);
+                    GPIO_OUTPUT_SET(5,0);
+                }
+                i += 2;
+                break;
             case OP_MOTORR:
+                if (PORT_AT(i+1) >= 100) {
+                    GPIO_OUTPUT_SET(7,1);
+                    GPIO_OUTPUT_SET(8,0);
+                } else if (PORT_AT(i+1) <= -100) {
+                    GPIO_OUTPUT_SET(7,0);
+                    GPIO_OUTPUT_SET(8,1);
+                } else {
+                    GPIO_OUTPUT_SET(7,0);
+                    GPIO_OUTPUT_SET(8,0);
+                }
                 i += 2;
                 break;
             case OP_LEDS:
+                GPIO_OUTPUT_SET(16, PORT_AT(i+1) <= 0 ? 1 : 0);
+                GPIO_OUTPUT_SET(2, PORT_AT(i+3) <= 0 ? 1 : 0);
                 i += 4;
                 break;
             default:

@@ -328,9 +328,12 @@ window.onload = function () {
     var op_nodes_json = [];
 
     Prog.prototype.upload = function() {
-        var s = this.serialize();
-        document.getElementById('debug').textContent = s;
+        var s = this.serialize(false);
         ajax_post('/load/hex', s.replace(/\s+/g, ''), this.update.bind(this));
+    }
+
+    Prog.prototype.poll = function() {
+        ajax_get('/dump', this.update.bind(this));
     }
 
     Prog.prototype.update = function (status,text) {
@@ -346,12 +349,13 @@ window.onload = function () {
                 n.output_ports.forEach(function (p) {
                     if (p.port_id && ports_dict[p.port_id])
                         p.show_value(ports_dict[p.port_id]);
+                    else p.hide_value();
                 }, this);
             }, this);
         }
 
-        var s = "\n\n" + status + "\n" + (status == 200 ? text : '');
-        document.getElementById('debug').textContent += s;
+        var s = this.serialize(true) + "\n\n" + (status == 200 ? text : status);
+        document.getElementById('debug').textContent = s;
     }
     
     Prog.prototype.init = function(html_element) {
@@ -430,19 +434,19 @@ window.onload = function () {
         this.svg_element.addEventListener('touchcancel', drag_end.bind(this));
     }
 
-    Prog.prototype.serialize = function() {
+    Prog.prototype.serialize = function(whitespace) {
         var nodes = this.nodes.filter(function (n) { return n.is_active() });
         nodes.sort(function (a, b) { return a.order - b.order; });
         
         return nodes.map(function (n) {
             return to_hex_byte(n.json.op) +
                 n.input_ports.map(function (p) {
-                    return " " + to_hex_byte(p.port_id || 0);
+                    return (whitespace ? " " : "") + to_hex_byte(p.port_id || 0);
                 }).join("") +
                 n.output_ports.map(function (p) {
-                    return " " + to_hex_byte(p.port_id || 0);
+                    return (whitespace ? " " : "") + to_hex_byte(p.port_id || 0);
                 }).join("");        
-        }).join("\n");
+        }).join(whitespace ? "\n" : "");
 
     }
     
@@ -460,6 +464,8 @@ window.onload = function () {
         op_nodes_json = json.filter(function (nj) { return !nj.single });
         var prog = new Prog(json);
         prog.init(document.body);
+
+        setInterval(function () { prog.poll() }, 1000);
     });
 
 }

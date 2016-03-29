@@ -48,6 +48,12 @@ HttpdBuiltInUrl builtInUrls[]={
     {NULL, NULL, NULL}
 };
 
+static os_timer_t vmExecTimer;
+
+void vmExecCb() {
+    virtual_exec(&VM);
+}
+
 void user_init(void) {
     const char ssid[32] = "NotMyAP";
     const char password[64] = "NotMyPassword";
@@ -67,4 +73,8 @@ void user_init(void) {
 
     espFsInit((void*)(webpages_espfs_start));
     httpdInit(builtInUrls, 80);
+
+    os_timer_disarm(&vmExecTimer);
+    os_timer_setfn(&vmExecTimer, vmExecCb, NULL);
+    os_timer_arm(&vmExecTimer, 100, 1);
 }
