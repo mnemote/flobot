@@ -16,3 +16,16 @@ g.node.drag circle.port, g.node circle.port.drag { stroke: red; fill: #FDD; }
 
 path.edge { fill: transparent; stroke-width: 2; stroke: #888;}
 path.edge.drag { stroke: red; }
+
+div.instructions {
+    position: fixed;
+    top: 25px;
+    width: 300px;
+    right: 250px;
+    margin: auto;
+    z-index: -5;
+}
+
+rect.toolbox {
+    stroke: blue; stroke-width: 2; fill: #F8F8F8; cursor: move; rx: 5px; z-index: -2;
+}

@@ -119,6 +119,7 @@ window.onload = function () {
     }
 
     Port.prototype.drag_init = function () {
+        if (this.node.toolbox) return null;
         if (this.is_input) this.remove_edges();
         var new_edge = new Edge(this, null);
         new_edge.init(this.node.prog.svg_element);
@@ -132,7 +133,7 @@ window.onload = function () {
             }.bind(this),
             done: function(target) {
                 this.svg_circle.setAttribute('class', 'port');
-                if (target && target.edges && target.node != this.node) {
+                if (target && target.edges && target.node != this.node && !target.node.toolbox) {
                     if (this.is_input && !target.is_input) {
                         this.remove_edges();
                         target.create_edge(this);
@@ -257,6 +258,14 @@ window.onload = function () {
     }
 
     Node.prototype.drag_init = function() {
+        if (this.toolbox) {
+            var other = new Node(this.prog, this.json);
+            other.geometry.x = this.geometry.x;
+            other.geometry.y = this.geometry.y;
+            other.init(this.svg_group.parentNode);
+            return other.drag_init();
+        }
+
         this.svg_group.parentNode.appendChild(this.svg_group); // move to top
         this.svg_group.setAttribute('class', 'node drag');
     
@@ -325,8 +334,6 @@ window.onload = function () {
         node.init(this.svg_element);
     }
 
-    var op_nodes_json = [];
-
     Prog.prototype.upload = function() {
         var s = this.serialize(false);
         ajax_post('/load/hex', s.replace(/\s+/g, ''), this.update.bind(this));
@@ -364,18 +371,41 @@ window.onload = function () {
         this.svg_element.setAttribute('width', '100%');
         html_element.appendChild(this.svg_element);
 
-        this.nodes.forEach(this.node_init, this);
-    
-        function new_node(e) {
-            var node_json = op_nodes_json[Math.floor(Math.random() * op_nodes_json.length)];
-            var node = new Node(this, node_json);
-            node.geometry.x = e.screenX - 50; node.geometry.y = e.screenY - 25;
-            this.nodes.push(node);
+        this.nodes.filter(function (node) {
+            return node.input_ports.length == 0 && node.output_ports.length > 0;
+        }).forEach(function (node, n) {
+            node.geometry.x = n * 175;
+            node.geometry.y = 25;
             node.init(this.svg_element);
-        }
+        }, this);
 
-        this.svg_element.addEventListener('dblclick', new_node.bind(this));
+        this.nodes.filter(function (node) {
+            return node.input_ports.length > 0 && node.output_ports.length == 0;
+        }).forEach(function (node, n) {
+            node.geometry.x = n * 175;
+            node.geometry.y = this.svg_element.clientHeight - 85;
+            node.init(this.svg_element);
+        }, this);
 
+        var n_ops = 0;
+        this.nodes.filter(function (node) {
+            return node.input_ports.length > 0 && node.output_ports.length > 0;
+        }).forEach(function (node, n) {
+            node.geometry.x = this.svg_element.clientWidth - 168;
+            node.geometry.y = n * 85 + 25;
+            node.toolbox = true;
+            node.init(this.svg_element);
+            n_ops = n;
+        }, this);
+        var toolbox = document.createElementNS(svg_xmlns, 'rect');
+        toolbox.setAttribute('class', 'toolbox');
+        toolbox.setAttribute('x', this.svg_element.clientWidth - 180);
+        toolbox.setAttribute('y', 5);
+        toolbox.setAttribute('width', 175);
+        toolbox.setAttribute('height', n_ops * 85 + 100);
+        toolbox.setAttribute('rx', 10);
+        this.svg_element.insertBefore(toolbox, this.svg_element.firstChild);
+        
         var drag_target = null;
         var drag_offset_x = 0;
         var drag_offset_y = 0;
@@ -452,16 +482,6 @@ window.onload = function () {
     
     ajax_get('opcodes.json', function (status, data) {
         var json = JSON.parse(data);
-        json.sort(function (a,b) {
-            // order the output-only ones before the general ones 
-            // before the input-only ones ...
-            if (a.inputs && !b.inputs) return +1;
-            if (b.inputs && !a.inputs) return -1;
-            if (a.outputs && !b.outputs) return -1;
-            if (b.outputs && !a.outputs) return +1;
-            return a.op - b.op;
-        });
-        op_nodes_json = json.filter(function (nj) { return !nj.single });
         var prog = new Prog(json);
         prog.init(document.body);
 
