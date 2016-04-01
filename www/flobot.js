@@ -300,13 +300,22 @@ window.onload = function () {
         this.svg_group.setAttribute('class', 'node');
         svg_element.appendChild(this.svg_group);
         
-        this.svg_rect = document.createElementNS(svg_xmlns, 'rect');
-        this.svg_rect.setAttribute('width', 150);
-        this.svg_rect.setAttribute('height', 50);
-        this.svg_rect.setAttribute('rx', 5);
-        this.svg_rect._target = this;
-        this.svg_group.appendChild(this.svg_rect);
-
+        if (!this.input_ports.length) {
+            var svg_path = document.createElementNS(svg_xmlns, 'path');
+            svg_path.setAttribute('d', 'M 0 10 A 75 20 0 0 1 150 10 L 150 45  A 5 5 0 0 1 145 50 L 5 50 A 5 5 0 0 1 0 45 Z');
+            this.svg_group.appendChild(svg_path);            
+        } else if (!this.output_ports.length) {
+            var svg_path = document.createElementNS(svg_xmlns, 'path');
+            svg_path.setAttribute('d', 'M 0 40 A 75 20 1 0 0 150 40 L 150 5  A 5 5 0 0 0 145 0 L 5 0 A 5 5 0 0 0 0 5 Z');
+            this.svg_group.appendChild(svg_path);
+        } else {
+            var svg_rect = document.createElementNS(svg_xmlns, 'rect');
+            svg_rect.setAttribute('width', 150);
+            svg_rect.setAttribute('height', 50);
+            svg_rect.setAttribute('rx', 5);
+            svg_rect._target = this;
+            this.svg_group.appendChild(svg_rect);
+        }
         this.svg_label = document.createElementNS(svg_xmlns, 'text');
         this.svg_label.textContent = this.json.label;
         this.svg_label.setAttribute('x', 75);
@@ -374,7 +383,7 @@ window.onload = function () {
         this.nodes.filter(function (node) {
             return node.input_ports.length == 0 && node.output_ports.length > 0;
         }).forEach(function (node, n) {
-            node.geometry.x = n * 175;
+            node.geometry.x = 25 + n * 175;
             node.geometry.y = 25;
             node.init(this.svg_element);
         }, this);
@@ -382,7 +391,7 @@ window.onload = function () {
         this.nodes.filter(function (node) {
             return node.input_ports.length > 0 && node.output_ports.length == 0;
         }).forEach(function (node, n) {
-            node.geometry.x = n * 175;
+            node.geometry.x = 25 + n * 175;
             node.geometry.y = this.svg_element.clientHeight - 85;
             node.init(this.svg_element);
         }, this);
