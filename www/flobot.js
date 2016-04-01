@@ -263,6 +263,7 @@ window.onload = function () {
             other.geometry.x = this.geometry.x;
             other.geometry.y = this.geometry.y;
             other.init(this.svg_group.parentNode);
+            this.prog.nodes.push(other);
             return other.drag_init();
         }
 
