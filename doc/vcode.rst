@@ -2,110 +2,90 @@
  FloBot: VM codes
 ==================
 
-Hardware Interface
-==================
-
-Programs start with a number of nodes defined: some inputs and some 
-outputs.  So our line follower might have inputs for line left and
-line right, and outputs for motor left and motor right.  These
-pre-existing nodes can't be deleted or created, they just are.
-
-Nodes are ordered so that connections from output to input are always
-from a lower numbered node to a higher one.  This eliminates the
-possibility of cycles and means that a single pass through all nodes
-is sufficient to recalculate everything.  Later, as an optimization, 
-running only some branches could be considered.
-
-Inserting Nodes
----------------
-
-When a node is added to the program, it can just be inserte anywhere
-on the list.  If it isn't connected to anything, its position doesn't
-matter. 
-
-To keep nodes in order, every time an edge is added the nodes are
-rearranged to maintain this property.  If the user attempts to create
-a cycle, older links are broken to prevent this.  
-
-Serializing Nodes
------------------
-
-Once all this is done, nodes can easily be iterated over and turned into
-binary-encoded data for execution.
-
 .. note::
 
-  This VM is very sketchy and only intended to be a very early 
-  go at it, so I don't get all hung up on the details and never get
-  around to working on the other parts.  It will change a lot.
-
-  Important features are missing:
-
-  * Instructions can only have two inputs: an IF(,,) needs three!
-  * Instructions can only have one output: a flip-flop would be better
-    with two
-  * Instructions have no hidden state: I'd like to support
-    "differentiate" and "integrate" and "limit rate of change"
-    instructions to make it simple to get nice kinematics
-  * The encoding is really quite inefficient.
-
-  I'm wondering if I should just implement a Forth and get it over with :-)
-
-  But here's what's here for now:
-
-Ports
-=====
-
-* Programs have up to PORT_MAX (4096) ports.
-
-* Each port has a value which is a signed 16-bit int, which is
-  interpreted as a fixed-point number with divisor 100.
-
-  * 0x0000 represents   0.00
-  * 0x0064 represents   1.00
-  * 0x1234 represents  46.60
-  * 0xd0d0 represents -120.80
-
-* The first N_input ports are input ports, and have no instruction
-  associated with them.
-
-* The remaining N_codes ports are the outputs of instructions ...
-
-* Including the last N_output ports, which are the outputs
-
+    This all completely changed.  It's amazing what writing
+    working code will do to your ideas :-)
 
 Instructions
 ============
 
-* There are no instructions corresponding to input ports.
-* Each instruction has an opcode and up to 2 ports as inputs.
-* Each instruction is associated with an output port.
-* When the instruction runs it reads the inputs and updates the output.
-* Instructions may only read from ports lower than their output port.
-* Input port number PORT_MAX is reserved as "NO PORT".
+The virtual machine defines a whole bunch of opcodes which take a 
+variable number of 'ports' as their inputs and outputs.  Instructions
+can set multiple ports, but each port is set by a single instruction.
 
+Instructions are defined by a 'opcodes.json' file exported from the
+C code.  (At the moment this is just a static file, I'd like to make 
+this a bit more clever to keep the JSON file in sync with the C)
 
-Binary Format
-=============
+Hardware Interface
+------------------
 
-When uploading code to the robot:
+Some instructions correspond to reads or writes of hardware.
+Sensor instructions only have outputs, and actuator instructions only
+have inputs.  There can be multiple ports per instruction, for example
+a line sensor could have two output ports, and an RGB LED could have three
+inputs ports.
 
-* Each instruction is packed into an unsigned 32-bit big-endian word.
-* Highest 8 bits are the opcode.
-* Constants are represented as the opcode "NOP" and the remaining 24
-  bits are the constant
-* Other opcodes have up to two port numbers of 12 bits each.
+These instructions are special in that they can occur only once each
+within a program.  This is a bit odd, but simplifies the compilation
+process a lot.
 
-This is a reasonably compact and portable format which avoids too 
-much buffering around.
+Components
+----------
 
+Other instructions represent logic operations on data, for example adding
+two numbers or remembering state with a flip-flop.  No side effects are
+allowed.  Many instances of these can be used.
+
+In the longer run, I'd like to support:
+
+* variadic components, like an N-way add.
+* ganged components, like an N-bit latch.
+* compound components (eg: subroutines)
+
+Connecting Nodes
+================
+
+The UI allows the user to connect nodes.  Each input node may only be
+connected to a single output node, but each output node may have multiple
+input nodes.  Disconnected inputs are assumed to be '0'.
+
+The UI removes cycles by keeping track of an 'order' per node.  Output-only
+nodes have an order 1, and all other nodes have an order at least one more
+than the maximum order of the nodes connected to their inputs.
+
+Cycles are removed by culling or disallowing edges which would cause
+them: this process needs some work still.
+
+Ports numbers aren't assigned in any particularly strict order.
+Instead, the UI tries to keep the port numbers stable so that live
+changes to the bytecode will be minimally disruptive to robot 
+behaviour.
+
+Serializing Nodes
+-----------------
+
+Once all this is done, nodes can easily be iterated over in order
+of 'order', and turned into binary-encoded data for execution.
+
+Each instruction has an associated opcode byte, and knows
+how many other bytes it will use up.  Most instructions just
+take a number of port addresses.  There are up to 255 ports, with 
+0 reserved as "no connection" output or "zero" input.
+
+Port Values
+-----------
+
+At this point, port values are a signed, fixed-point 16 bit value,
+with a divisor of 100.  This is probably a little too small.
+Overflows and underflows need to be handled more cleverly, or else
+move to using floats.
 
 Hexadecimal Format
 ==================
 
 Javascript's binary handling is even more deranged than C's string
-handling, so code can also be represented as groups of 8 hex digits
-separated by a single whitespace.  I'm not totally happy with this,
-but we'll see how it goes.
-
+handling, so code is uploaded to the robot as a string of hex
+characters.  I'm tempted to change this to base64.
 
