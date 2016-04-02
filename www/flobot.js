@@ -395,11 +395,13 @@ window.onload = function () {
 
     Prog.prototype.upload = function() {
         var s = this.serialize(false);
-       // ajax_post('/load/hex', s.replace(/\s+/g, ''), this.update.bind(this));
+       ajax_post('/load/hex', s.replace(/\s+/g, ''), this.update.bind(this));
     }
 
+    var poll_timer = null;
+
     Prog.prototype.poll = function() {
-//        ajax_get('/dump', this.update.bind(this));
+        ajax_get('/dump', this.update.bind(this));
     }
 
     Prog.prototype.update = function (status,text) {
@@ -418,6 +420,9 @@ window.onload = function () {
                     else p.hide_value();
                 }, this);
             }, this);
+
+            if (poll_timer) clearTimeout(poll_timer);
+            poll_timer = setTimeout(function () { prog.poll() }, 1000);
         }
 
         var s = this.serialize(true) + "\n\n" + (status == 200 ? text : status);
@@ -543,8 +548,6 @@ window.onload = function () {
         var json = JSON.parse(data);
         var prog = new Prog(json);
         prog.init(document.body);
-
-        setInterval(function () { prog.poll() }, 1000);
     });
 
 }
