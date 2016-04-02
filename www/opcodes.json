@@ -39,8 +39,18 @@
             { "label": "B", "type": "bool" }
         ]
     }, {
+        "op": 255,
+        "label": "Variable",
+        "variable": true,
+        "outputs": [ {} ]
+    }, {
+        "op": 255,
+        "label": "Variable",
+        "variable": true,
+        "outputs": [ { "type": "bool" } ]
+    }, {
         "op": 235,
-        "label": "If / Then / Else",
+        "label": "If : Then : Else",
         "inputs": [ { "type": "bool" }, {}, {} ],
         "outputs": [ {} ]
     }, {
@@ -93,6 +103,7 @@
         "inputs": [ {}, {} ],
         "outputs": [
             { "label": "<", "type": "bool" },
+            { "label": "=", "type": "bool" },
             { "label": ">", "type": "bool" }
         ]
     }, {

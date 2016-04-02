@@ -6,8 +6,8 @@ svg { font-family: "Architects Daughter", "Chalkboard SE", "Comic Sans", sans-se
 text { dominant-baseline: middle; text-anchor: middle; }
 
 g.node { position: absolute; }
-g.node rect { stroke: blue; stroke-width: 2; fill: #DDD; cursor: move; rx: 5px; }
-g.node path { stroke: blue; stroke-width: 2; fill: #DDD; cursor: move; rx: 5px; }
+g.node rect { stroke: blue; stroke-width: 2; fill: #DDD; cursor: move; }
+g.node path { stroke: blue; stroke-width: 2; fill: #DDD; cursor: move; }
 
 g.node text { cursor: move; }
 g.node.drag rect { stroke: red; fill: #FDD; }
@@ -26,7 +26,7 @@ div.instructions {
     position: fixed;
     top: 25px;
     width: 300px;
-    right: 250px;
+    right: 350px;
     margin: auto;
     z-index: -5;
 }
@@ -37,4 +37,11 @@ rect.toolbox {
 
 .invert {
     text-decoration: overline;
+}
+
+input {
+    border: none;
+    background-color: #ddd;
+    font-size: 20px;
+    text-align: center;
 }

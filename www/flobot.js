@@ -266,6 +266,7 @@ window.onload = function () {
         }, this);
         this.order = 0;
         this.geometry = json.geometry || { x: 100, y: 100 };
+        this.variable = json.variable;
     };
 
     Node.prototype.is_active = function() {
@@ -294,11 +295,28 @@ window.onload = function () {
         }
     }
 
+    Node.prototype.get_value = function(target) {
+        if (this.output_ports[0].type == 'bool') {
+            this.variable_value = target.checked ? 0.01 : 0;
+        } else {
+            this.variable_value = Math.round(100 * target.value) / 100;
+        }
+    }
+
     Node.prototype.update = function() {
         var translate = 'translate(' + this.geometry.x + ',' + this.geometry.y + ')';
         this.svg_group.setAttribute('transform', translate);
         this.input_ports.forEach(function (p) { p.update(); });
         this.output_ports.forEach(function (p) { p.update(); });
+        if (this.html_input) {
+            var x = this.geometry.x + 18;
+            var y = this.geometry.y + 15;
+            var h = (this.geometry.height || 50) - 20;
+            var w = (this.output_ports[0].type == "bool") ? h : (this.geometry.width || 150) - 20;
+
+            this.html_input.setAttribute('style', 'position:fixed;width:' + w + ';height:' + h +
+                                                ';top:' + y + ';left:' + x);
+        }
     }
 
     Node.prototype.drag_init = function() {
@@ -349,7 +367,38 @@ window.onload = function () {
         var h = this.geometry.height || (w/3);
         var r = this.geometry.corner || (h/10);
 
-        if (this.input_ports.length && this.output_ports.length) {
+        if (this.variable) {
+            var s = document.createElementNS(svg_xmlns, 'rect');
+            s.setAttribute('width', w);
+            s.setAttribute('height', h);
+            s.setAttribute('rx', h/2);
+            s._target = this;
+            this.svg_group.appendChild(s);
+
+            if (!this.toolbox) {
+                this.html_input = document.createElement('input');
+                if (this.output_ports[0].type == 'bool') {
+                    this.html_input.setAttribute('type', 'checkbox');
+                    this.html_input.addEventListener('change', function (e) {
+                        this.variable_value = this.html_input.checked ? 0.01 : 0;
+                        this.prog.upload();
+                    }.bind(this));
+                } else {
+                    this.html_input.addEventListener('keyup', function (e) {
+                        this.get_value(e.target);
+                        this.prog.upload();
+                    }.bind(this));
+                    this.html_input.addEventListener('change', function (e) {
+                        this.get_value(e.target);
+                        this.prog.upload();
+                        e.target.blur();
+                        e.target.value = this.variable_value;
+                    }.bind(this));
+                }
+                this.prog.svg_element.parentNode.appendChild(this.html_input);
+
+            }
+        } else if (this.input_ports.length && this.output_ports.length) {
             var svg_rect = document.createElementNS(svg_xmlns, 'rect');
             svg_rect.setAttribute('width', w);
             svg_rect.setAttribute('height', h);
@@ -366,13 +415,14 @@ window.onload = function () {
             this.svg_group.appendChild(svg_path);
         }
 
-        this.svg_label = document.createElementNS(svg_xmlns, 'text');
-        this.svg_label.textContent = this.json.label;
-        this.svg_label.setAttribute('x', 75);
-        this.svg_label.setAttribute('y', 28);
-        this.svg_label._target = this;
-        this.svg_group.appendChild(this.svg_label);
-
+        if (!this.html_input) {
+            this.svg_label = document.createElementNS(svg_xmlns, 'text');
+            this.svg_label.textContent = this.json.label;
+            this.svg_label.setAttribute('x', w/2);
+            this.svg_label.setAttribute('y', h/2);
+            this.svg_label._target = this;
+            this.svg_group.appendChild(this.svg_label);
+        }
         this.update();
 
         this.input_ports.forEach(this.init_port, this);
@@ -436,7 +486,7 @@ window.onload = function () {
         html_element.appendChild(this.svg_element);
 
         this.nodes.filter(function (node) {
-            return node.input_ports.length == 0 && node.output_ports.length > 0;
+            return node.input_ports.length == 0 && node.output_ports.length > 0 && !node.variable;
         }).forEach(function (node, n) {
             node.geometry.x = 25 + n * 175;
             node.geometry.y = 25;
@@ -453,20 +503,20 @@ window.onload = function () {
 
         var n_ops = 0;
         this.nodes.filter(function (node) {
-            return node.input_ports.length > 0 && node.output_ports.length > 0;
+            return (node.input_ports.length > 0 && node.output_ports.length > 0) || node.variable;
         }).forEach(function (node, n) {
-            node.geometry.x = this.svg_element.clientWidth - 168;
-            node.geometry.y = n * 85 + 25;
+            node.geometry.x = this.svg_element.clientWidth - 328 + (160 * (n % 2));
+            node.geometry.y = Math.floor(n/2) * 85 + 25;
             node.toolbox = true;
             node.init(this.svg_element);
             n_ops = n;
         }, this);
         var toolbox = document.createElementNS(svg_xmlns, 'rect');
         toolbox.setAttribute('class', 'toolbox');
-        toolbox.setAttribute('x', this.svg_element.clientWidth - 180);
+        toolbox.setAttribute('x', this.svg_element.clientWidth - 342);
         toolbox.setAttribute('y', 5);
-        toolbox.setAttribute('width', 175);
-        toolbox.setAttribute('height', n_ops * 85 + 100);
+        toolbox.setAttribute('width', 340);
+        toolbox.setAttribute('height', Math.ceil((n_ops-1)/2) * 85 + 100);
         toolbox.setAttribute('rx', 10);
         this.svg_element.insertBefore(toolbox, this.svg_element.firstChild);
         
@@ -533,13 +583,19 @@ window.onload = function () {
         nodes.sort(function (a, b) { return a.order - b.order; });
         
         return nodes.map(function (n) {
-            return to_hex_byte(n.json.op) +
-                n.input_ports.map(function (p) {
-                    return (whitespace ? " " : "") + to_hex_byte(p.port_id || 0);
-                }).join("") +
-                n.output_ports.map(function (p) {
-                    return (whitespace ? " " : "") + to_hex_byte(p.port_id || 0);
-                }).join("");        
+            if (n.variable) {
+                var v = n.variable_value * 100;
+                return to_hex_byte(n.json.op) + to_hex_byte(v >> 8) +
+                       to_hex_byte(v & 0xFF) + to_hex_byte(n.output_ports[0].port_id || 0);
+            } else {
+                return to_hex_byte(n.json.op) +
+                    n.input_ports.map(function (p) {
+                        return (whitespace ? " " : "") + to_hex_byte(p.port_id || 0);
+                    }).join("") +
+                    n.output_ports.map(function (p) {
+                        return (whitespace ? " " : "") + to_hex_byte(p.port_id || 0);
+                    }).join("");
+            }
         }).join(whitespace ? "\n" : "");
 
     }
