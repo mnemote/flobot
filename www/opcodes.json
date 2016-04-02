@@ -9,8 +9,8 @@
         "label": "Line Sensor",
         "op": 161,
         "outputs": [
-            { "label": "L" },
-            { "label": "R" }
+            { "label": "L", "type": "bool" },
+            { "label": "R", "type": "bool" }
         ]
     }, {
         "label": "Ambient Light",
@@ -34,9 +34,9 @@
         "label": "LED",
         "op": 178,
         "inputs": [
-            { "label": "R" },
-            { "label": "G" },
-            { "label": "B" }
+            { "label": "R", "type": "bool" },
+            { "label": "G", "type": "bool" },
+            { "label": "B", "type": "bool" }
         ]
     }, {
         "op": 224,
@@ -72,15 +72,38 @@
         "inputs": [ {}, {}],
         "outputs": [ {} ]
     }, {
-	"op": 230,
+	   "op": 230,
         "label": "Flip-flop",
         "inputs": [
-            { "label": "S" },
-            { "label": "R" }
+            { "label": "S", "type": "bool" },
+            { "label": "R", "type": "bool" }
         ],
         "outputs": [
-            { "label": "Q" },
-            { "label": "Q", "invert": true }
+            { "label": "Q", "type": "bool" },
+            { "label": "Q", "type": "bool", "invert": true }
         ]
+    }, {
+        "op": 231,
+        "label": "Compare",
+        "inputs": [ {}, {} ],
+        "outputs": [
+            { "label": "<", "type": "bool" },
+            { "label": ">", "type": "bool" }
+        ]
+    }, {
+        "op": 232,
+        "label": "And",
+        "inputs": [ { "type": "bool" }, { "type": "bool" } ],
+        "outputs": [ { "type": "bool" } ]
+    }, {
+        "op": 233,
+        "label": "Or",
+        "inputs": [ { "type": "bool" }, { "type": "bool" } ],
+        "outputs": [ { "type": "bool" } ]
+    }, {
+        "op": 234,
+        "label": "Not",
+        "inputs": [ { "type": "bool" } ],
+        "outputs": [ { "type": "bool" } ]
     }
 ]

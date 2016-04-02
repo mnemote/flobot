@@ -112,6 +112,8 @@ window.onload = function () {
     var Port = function(node, json, is_input, offset_x, offset_y) {
         this.node = node;
         this.label = json.label;
+        this.invert = json.invert;
+        this.type = json.type || 'num';
         this.is_input = is_input;
         this.offset_x = offset_x;
         this.offset_y = offset_y;
@@ -123,8 +125,24 @@ window.onload = function () {
         if (this.is_input) this.remove_edges();
         var new_edge = new Edge(this, null);
         new_edge.init(this.node.prog.svg_element);
-        this.svg_circle.setAttribute('class', 'port drag');
+        this.svg_port.setAttribute('class', 'port drag');
         new_edge.svg_spline.setAttribute('class', 'edge drag');
+        this.node.prog.nodes.forEach(function (n) {
+            if (!n.toolbox && this.is_input) {
+                n.output_ports.forEach(function (p) {
+                    if (p.type == this.type) {
+                        p.svg_port.setAttribute('class', 'port drag');
+                    }
+                }, this);
+            }
+            if (!n.toolbox && !this.is_input) {
+                n.input_ports.forEach(function (p) {
+                    if (p.type == this.type) {
+                        p.svg_port.setAttribute('class', 'port drag');
+                    }
+                }, this);
+            }
+        }, this);    
         var new_target = null;
         return {
             drag: function(target, delta_x, delta_y) {
@@ -132,8 +150,16 @@ window.onload = function () {
                 else new_edge.move_dst(delta_x, delta_y);
             }.bind(this),
             done: function(target) {
-                this.svg_circle.setAttribute('class', 'port');
-                if (target && target.edges && target.node != this.node && !target.node.toolbox) {
+                this.node.prog.nodes.forEach(function (n) {
+                    n.input_ports.forEach(function (p) {
+                        p.svg_port.setAttribute('class', 'port');
+                    }, this);
+                    n.output_ports.forEach(function (p) {
+                        p.svg_port.setAttribute('class', 'port');
+                    }, this);
+                }, this);
+                new_edge.svg_spline.setAttribute('class', 'edge drag');
+                if (target && target.edges && target.type == this.type && target.node != this.node && !target.node.toolbox) {
                     if (this.is_input && !target.is_input) {
                         this.remove_edges();
                         target.create_edge(this);
@@ -149,22 +175,27 @@ window.onload = function () {
 
     Port.prototype.init = function(svg_group) {
         this.svg_group = svg_group;
-        this.svg_circle = document.createElementNS(svg_xmlns, 'circle');
-        this.svg_circle.setAttribute('class', 'port');
-        this.svg_circle.setAttribute('cx', this.offset_x);
-        this.svg_circle.setAttribute('cy', this.offset_y);
-        this.svg_circle.setAttribute('r', 12);
-        this.svg_circle._target = this;
-        svg_group.appendChild(this.svg_circle);
+        if (this.type == 'bool') {
+            this.svg_port = document.createElementNS(svg_xmlns, 'rect');
+            this.svg_port.setAttribute('class', 'port');
+            this.svg_port.setAttribute('x', this.offset_x - 12);
+            this.svg_port.setAttribute('y', this.offset_y - 12);
+            this.svg_port.setAttribute('width', 24);
+            this.svg_port.setAttribute('height', 24);
+            this.svg_port.setAttribute('rx', 5);
+        } else {
+            this.svg_port = document.createElementNS(svg_xmlns, 'circle');
+            this.svg_port.setAttribute('class', 'port');
+            this.svg_port.setAttribute('cx', this.offset_x);
+            this.svg_port.setAttribute('cy', this.offset_y);
+            this.svg_port.setAttribute('r', 12);
+        }
+        this.svg_port._target = this;
+        svg_group.appendChild(this.svg_port);
         if (this.label) {
             this.svg_label = document.createElementNS(svg_xmlns, 'text');
-            if (this.label.substr(0,1) == "!") {
-                this.svg_label.textContent = this.label.substr(1);
-                this.svg_label.setAttribute('style', 'text-decoration: overline');
-            } else {
-                this.svg_label.textContent = this.label;
-            }
-            this.svg_label.setAttribute('class', 'port');
+            this.svg_label.textContent = this.label;
+            this.svg_label.setAttribute('class', this.invert ? 'port invert' : 'port');
             this.svg_label.setAttribute('x', this.offset_x);
             this.svg_label.setAttribute('y', this.offset_y);
             this.svg_label._target = this;
@@ -346,11 +377,11 @@ window.onload = function () {
 
     Prog.prototype.upload = function() {
         var s = this.serialize(false);
-        ajax_post('/load/hex', s.replace(/\s+/g, ''), this.update.bind(this));
+       // ajax_post('/load/hex', s.replace(/\s+/g, ''), this.update.bind(this));
     }
 
     Prog.prototype.poll = function() {
-        ajax_get('/dump', this.update.bind(this));
+//        ajax_get('/dump', this.update.bind(this));
     }
 
     Prog.prototype.update = function (status,text) {
