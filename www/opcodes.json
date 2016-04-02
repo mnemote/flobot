@@ -17,5 +17,6 @@
  { "op": 233, "label": "Or", "inputs": [{}, {}], "outputs": [{}] },
  { "op": 234, "label": "Not", "inputs": [{}], "outputs": [{}] },
  { "op": 235, "label": "If/Then/Else", "inputs": [{"type":"bool"}, {}, {}], "outputs": [{}] },
- { "op": 255, "label": "Variable", "outputs": [{}], "variable": true }
+ { "op": 255, "label": "Variable", "outputs": [{}], "variable": true },
+ { "op": 255, "label": "Variable", "outputs": [{ "type": "bool"}], "variable": true }
  ]   

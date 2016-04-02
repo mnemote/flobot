@@ -174,7 +174,7 @@ endef
 all: checkdirs copyfiles $(TARGET_OUT) $(FW_BASE)
 
 copyfiles:
-	perl -nle 'print if s/\/\/\/\/\///' < vm/virtual.c > ../www/opcodes.json
+	perl -nle 'print if s/^\/\/\/\/\///' < vm/virtual.c > ../www/opcodes.json
 	cp -r ../www/* ./html
 
 libesphttpd/Makefile:

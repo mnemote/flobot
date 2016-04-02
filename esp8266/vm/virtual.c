@@ -5,7 +5,7 @@
 #include <gpio.h>
 #include <user_interface.h>
 
-// Is this really not defined *somewhere*?
+// XXX Is this really not defined *somewhere*?
 int ets_sprintf(char *str, const char *format, ...)  __attribute__ ((format (printf, 2, 3)));
 
 #include "virtual.h"
@@ -14,10 +14,6 @@ int ets_sprintf(char *str, const char *format, ...)  __attribute__ ((format (pri
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #define FROM_HEX(c) ('0' <= (c) && c <= '9' ? (c) - '0' : ((c) & 31) + 9)
 
-/*virtual_prog_t *virtual_init() {
-    virtual_prog_t *prog = (virtual_prog_t *)calloc(1, sizeof(virtual_prog_t));
-    return prog;
-}*/
 
 void virtual_load_bin(virtual_prog_t *prog, uint8_t *buf, size_t bufsiz) {
     bzero(prog->codes, sizeof(prog->codes));
@@ -34,12 +30,12 @@ void virtual_load_hex(virtual_prog_t *prog, char *buf, size_t bufsiz) {
     }
 }
 
+// The lines which start ///// get extracted by the Makefile and used to build a JSON
+// document "opcodes.json" which is served up at runtime.  This probably isn't the most
+// elegant way of doing this -- I was trying to work out a way using cpp -- but at least
+// it preserves some locality between VM instruction definitions and implementations.
 
 void virtual_exec(virtual_prog_t *prog) {
-
-    // XXX This has to be kept aligned with "opcodes.json" which is 
-    //     not great, but my cpp-fu is not sufficient to think of a 
-    //     better way
 
     // XXX There's a potential buffer overrun here too when decoding
     //     instructions.
@@ -191,7 +187,8 @@ void virtual_exec(virtual_prog_t *prog) {
                 i += 5;
                 break;
 
-///// { "op": 255, "label": "Variable", "outputs": [{}], "variable": true }
+///// { "op": 255, "label": "Variable", "outputs": [{}], "variable": true },
+///// { "op": 255, "label": "Variable", "outputs": [{ "type": "bool"}], "variable": true }
             case 255:
                 PORT_AT(i+1) = ((int16_t)prog->codes[i+2] << 8) + prog->codes[i+3];
                 i += 4;
@@ -233,7 +230,3 @@ void virtual_dump_hex(virtual_prog_t *prog, char *buf) {
         }
     }
 }
-        
-/*void virtual_free(virtual_prog_t *prog) {
-    free(prog);
-}*/ 
