@@ -39,6 +39,11 @@
             { "label": "B", "type": "bool" }
         ]
     }, {
+        "op": 235,
+        "label": "If / Then / Else",
+        "inputs": [ { "type": "bool" }, {}, {} ],
+        "outputs": [ {} ]
+    }, {
         "op": 224,
         "label": "Add",
         "inputs": [{}, {}],

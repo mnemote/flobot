@@ -8,12 +8,12 @@
 
 * Websockets for continous updates of display 
 
-* Component chooser
+* Component chooser [KIND OF STARTED]
 
 * Saving programs somehow, to localStorage and/or the espfs.
 
 * Boolean vs. Float types.  Bools can be little squares instead of 
-  little circles.  Only ports of the same types can connect.
+  little circles.  Only ports of the same types can connect. [DONE]
 
 * Variadic components, eg: ADD, AND, OR.
 

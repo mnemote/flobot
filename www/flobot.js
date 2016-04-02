@@ -345,26 +345,31 @@ window.onload = function () {
         this.svg_group.setAttribute('class', 'node');
         svg_element.appendChild(this.svg_group);
         
-        if (!this.input_ports.length) {
-            var svg_path = document.createElementNS(svg_xmlns, 'path');
-            svg_path.setAttribute('d', 'M 0 10 A 75 20 0 0 1 150 10 L 150 45  A 5 5 0 0 1 145 50 L 5 50 A 5 5 0 0 1 0 45 Z');
-            this.svg_group.appendChild(svg_path);            
-        } else if (!this.output_ports.length) {
-            var svg_path = document.createElementNS(svg_xmlns, 'path');
-            svg_path.setAttribute('d', 'M 0 40 A 75 20 1 0 0 150 40 L 150 5  A 5 5 0 0 0 145 0 L 5 0 A 5 5 0 0 0 0 5 Z');
-            this.svg_group.appendChild(svg_path);
-        } else {
+        var w = this.geometry.width || 150;
+        var h = this.geometry.height || (w/3);
+        var r = this.geometry.corner || (h/10);
+
+        if (this.input_ports.length && this.output_ports.length) {
             var svg_rect = document.createElementNS(svg_xmlns, 'rect');
-            svg_rect.setAttribute('width', 150);
-            svg_rect.setAttribute('height', 50);
-            svg_rect.setAttribute('rx', 5);
+            svg_rect.setAttribute('width', w);
+            svg_rect.setAttribute('height', h);
+            svg_rect.setAttribute('rx', r);
             svg_rect._target = this;
             this.svg_group.appendChild(svg_rect);
+        } else {
+            var svg_path = document.createElementNS(svg_xmlns, 'path');
+            var path_d = (this.output_ports.length) ?
+                ['M',0,h/2,'A',w/2,h/2,0,0,1,w,h/2,'L',w,h-r,'A',r,r,0,0,1,w-r,h,'L',r,h,'A',r,r,0,0,1,0,h-r,'Z'] :
+                ['M',0,h/2,'A',w/2,h/2,1,0,0,w,h/2,'L',w,r,'A',r,r,0,0,0,w-r,0,'L',r,0,'A',r,r,0,0,0,0,r,'Z'];
+            svg_path.setAttribute('d', path_d.join(' '));
+            svg_path._target = this;
+            this.svg_group.appendChild(svg_path);
         }
+
         this.svg_label = document.createElementNS(svg_xmlns, 'text');
         this.svg_label.textContent = this.json.label;
         this.svg_label.setAttribute('x', 75);
-        this.svg_label.setAttribute('y', 25);
+        this.svg_label.setAttribute('y', 28);
         this.svg_label._target = this;
         this.svg_group.appendChild(this.svg_label);
 
