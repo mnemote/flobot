@@ -98,7 +98,7 @@ void virtual_exec(virtual_prog_t *prog) {
                 i += 2;
                 break;
 
-///// { "op": 178, "label": "Divide", "inputs": [{ "label": "R", "type": "bool" }, { "label": "G", "type": "bool" }, { "label": "B", "type": "bool" }] },
+///// { "op": 178, "label": "LEDs", "inputs": [{ "label": "R", "type": "bool" }, { "label": "G", "type": "bool" }, { "label": "B", "type": "bool" }] },
             case 178:
                 GPIO_OUTPUT_SET(16, PORT_AT(i+1) <= 0 ? 1 : 0);
                 GPIO_OUTPUT_SET(2, PORT_AT(i+3) <= 0 ? 1 : 0);
