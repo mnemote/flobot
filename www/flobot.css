@@ -16,10 +16,12 @@ g.node.drag path { stroke: red; fill: #FDD; }
 g.node circle.port { stroke: blue; stroke-width: 2; fill: #DDD; cursor: crosshair; }
 g.node text.port { font-size: 60%; cursor: crosshair; }
 g.node.drag circle.port, g.node circle.port.drag, g.node rect.port.drag { stroke: red; fill: #FDD; }
+g.node circle.port.okay, g.node rect.port.okay { stroke: green; fill: #DFD; }
 
 path.edge { fill: transparent; stroke-width: 2; stroke: #888;}
 path.edge.drag { stroke: red; }
-
+path.edge.okay { stroke: green; 
+}
 div.instructions {
     position: fixed;
     top: 25px;

@@ -143,11 +143,24 @@ window.onload = function () {
                 }, this);
             }
         }, this);    
-        var new_target = null;
+        var new_target_port = null;
         return {
             drag: function(target, delta_x, delta_y) {
                 if (this.is_input) new_edge.move_src(delta_x, delta_y);
                 else new_edge.move_dst(delta_x, delta_y);
+                if (target && target.edges && target.type == this.type && target.node != this.node && target.is_input != this.is_input && !target.node.toolbox) {
+                    new_target_port = target;
+                    target.svg_port.setAttribute("class", "port drag okay");
+                    this.svg_port.setAttribute("class", "port drag okay");
+                    new_edge.svg_spline.setAttribute("class", "edge drag okay");
+                } else {
+                    this.svg_port.setAttribute("class", "port drag");
+                    new_edge.svg_spline.setAttribute("class", "edge drag");
+                    if (new_target_port) { 
+                        new_target_port.svg_port.setAttribute("class", "port drag");
+                        new_target_port = null;
+                    }
+                }
             }.bind(this),
             done: function(target) {
                 this.node.prog.nodes.forEach(function (n) {
