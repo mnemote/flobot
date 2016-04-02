@@ -1,125 +1,21 @@
-[
-    {
-        "label": "Range Sensor",
-        "op": 160,
-        "outputs": [
-            { "label": "d" }
-        ]
-    }, {
-        "label": "Line Sensor",
-        "op": 161,
-        "outputs": [
-            { "label": "L", "type": "bool" },
-            { "label": "R", "type": "bool" }
-        ]
-    }, {
-        "label": "Ambient Light",
-        "op": 162,
-        "outputs": [
-            { }
-        ]
-    }, {
-        "label": "Motor (Left)",
-        "op": 176,
-        "inputs": [
-            { }
-        ]
-    }, {
-        "label": "Motor (Right)",
-        "op": 177,
-        "inputs": [
-            { }
-        ]
-    }, {
-        "label": "LED",
-        "op": 178,
-        "inputs": [
-            { "label": "R", "type": "bool" },
-            { "label": "G", "type": "bool" },
-            { "label": "B", "type": "bool" }
-        ]
-    }, {
-        "op": 255,
-        "label": "Variable",
-        "variable": true,
-        "outputs": [ {} ]
-    }, {
-        "op": 255,
-        "label": "Variable",
-        "variable": true,
-        "outputs": [ { "type": "bool" } ]
-    }, {
-        "op": 235,
-        "label": "If : Then : Else",
-        "inputs": [ { "type": "bool" }, {}, {} ],
-        "outputs": [ {} ]
-    }, {
-        "op": 224,
-        "label": "Add",
-        "inputs": [{}, {}],
-        "outputs": [{}]
-    }, {
-        "op": 225,
-        "label": "Subtract",
-        "inputs": [
-            { "label": "+" },
-            { "label": "-"}
-        ],
-        "outputs": [{}]
-    }, {
-        "op": 226,
-        "label": "Multiply",
-        "inputs": [{}, {}],
-        "outputs": [{}]
-    }, {
-        "op": 227,
-        "label": "Divide",
-        "inputs": [{}, {}],
-        "outputs": [{}]
-    }, {
-        "op": 228,
-        "label": "Maximum",
-        "inputs": [{}, {}],
-        "outputs": [ {} ]
-    }, {
-        "op": 229,
-        "label": "Minimum",
-        "inputs": [ {}, {}],
-        "outputs": [ {} ]
-    }, {
-	   "op": 230,
-        "label": "Flip-flop",
-        "inputs": [
-            { "label": "S", "type": "bool" },
-            { "label": "R", "type": "bool" }
-        ],
-        "outputs": [
-            { "label": "Q", "type": "bool" },
-            { "label": "Q", "type": "bool", "invert": true }
-        ]
-    }, {
-        "op": 231,
-        "label": "Compare",
-        "inputs": [ {}, {} ],
-        "outputs": [
-            { "label": "<", "type": "bool" },
-            { "label": "=", "type": "bool" },
-            { "label": ">", "type": "bool" }
-        ]
-    }, {
-        "op": 232,
-        "label": "And",
-        "inputs": [ { "type": "bool" }, { "type": "bool" } ],
-        "outputs": [ { "type": "bool" } ]
-    }, {
-        "op": 233,
-        "label": "Or",
-        "inputs": [ { "type": "bool" }, { "type": "bool" } ],
-        "outputs": [ { "type": "bool" } ]
-    }, {
-        "op": 234,
-        "label": "Not",
-        "inputs": [ { "type": "bool" } ],
-        "outputs": [ { "type": "bool" } ]
-    }
-]
+ [
+ { "op": 160, "label": "Range Sensor", "outputs": [{}] },
+ { "op": 161, "label": "Line Sensor", "outputs": [{"label": "L", "type": "bool"}, {"label": "R", "type": "bool"}] },
+ { "op": 162, "label": "Ambient Light", "outputs": [{}] },
+ { "op": 176, "label": "Motor (Left)", "inputs": [{}] },
+ { "op": 177, "label": "Motor (Right)", "inputs": [{}] },
+ { "op": 178, "label": "Divide", "inputs": [{ "label": "R", "type": "bool" }, { "label": "G", "type": "bool" }, { "label": "B", "type": "bool" }] },
+ { "op": 224, "label": "Add", "inputs": [{}, {}], "outputs": [{}] },
+ { "op": 225, "label": "Subtract", "inputs": [{}, {}], "outputs": [{}] },
+ { "op": 226, "label": "Multiply", "inputs": [{}, {}], "outputs": [{}] },
+ { "op": 227, "label": "Divide", "inputs": [{}, {}], "outputs": [{}] },
+ { "op": 228, "label": "Maximum", "inputs": [{}, {}], "outputs": [{}] },
+ { "op": 229, "label": "Minimum", "inputs": [{}, {}], "outputs": [{}] },
+ { "op": 230, "label": "Flip-flop", "inputs": [{"label":"S","type":"bool"}, {"label":"R","type":"bool"}], "outputs": [{"label":"Q","type":"bool"}, {"label":"Q","type":"bool","invert":true}] },
+ { "op": 231, "label": "Compare", "inputs": [{}, {}], "outputs": [{"label":"<","type":"bool"},{"label":"=","type":"bool"},{"label":">","type":"bool"}] },
+ { "op": 232, "label": "And", "inputs": [{}, {}], "outputs": [{}] },
+ { "op": 233, "label": "Or", "inputs": [{}, {}], "outputs": [{}] },
+ { "op": 234, "label": "Not", "inputs": [{}], "outputs": [{}] },
+ { "op": 235, "label": "If/Then/Else", "inputs": [{"type":"bool"}, {}, {}], "outputs": [{}] },
+ { "op": 255, "label": "Variable", "outputs": [{}], "variable": true }
+ ]   

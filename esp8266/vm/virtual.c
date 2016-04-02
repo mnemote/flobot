@@ -48,63 +48,32 @@ void virtual_exec(virtual_prog_t *prog) {
 
 #define PORT_AT(n) (prog->ports[prog->codes[n]])
 
+///// [
     int i = 0;
     while (i < 256) {
         switch (prog->codes[i]) {
-            case OP_VAL16:
-                PORT_AT(i+1) = ((int16_t)prog->codes[i+2] << 8) + prog->codes[i+3];
-                i += 4;
-                break;
-            case OP_ADD:
-                PORT_AT(i+3) = PORT_AT(i+1) + PORT_AT(i+2);
-                i += 4;
-                break;
-            case OP_SUB:
-                PORT_AT(i+3) = PORT_AT(i+1) - PORT_AT(i+2);
-                i += 4;
-                break;
-            case OP_MUL:
-                PORT_AT(i+3) = (int16_t)((int32_t)PORT_AT(i+1) * PORT_AT(i+2) / 100);
-                i += 4;
-                break;
-            case OP_DIV:
-                PORT_AT(i+3) = (int16_t)((int32_t)PORT_AT(i+1) * 100 / PORT_AT(i+2));
-                i += 4;
-                break;
-            case OP_MAX:
-                PORT_AT(i+3) = MAX(PORT_AT(i+1), PORT_AT(i+2));
-                i += 4;
-                break;
-            case OP_MIN:
-                PORT_AT(i+3) = MIN(PORT_AT(i+1), PORT_AT(i+2));
-                i += 4;
-                break;
-            case OP_FLIPFLOP:
-                if (PORT_AT(i+1) > PORT_AT(i+2)) {
-                    PORT_AT(i+3) = 100; PORT_AT(i+4) = 0;
-                } else if (PORT_AT(i+1) < PORT_AT(i+2)) {
-                    PORT_AT(i+3) = 0; PORT_AT(i+4) = 100;
-                } else if (PORT_AT(i+3) == 0) {
-                    PORT_AT(i+4) = 100;
-                } else if (PORT_AT(i+4) == 0) {
-                    PORT_AT(i+3) = 100;
-                }
-                i += 5;
-                break;
-            case OP_RANGE:
+
+///// { "op": 160, "label": "Range Sensor", "outputs": [{}] },
+	    case 160:
                 PORT_AT(i+1) = system_adc_read() & 0xFFFF;
                 i += 2;
-                break;
-            case OP_LINES:
-                PORT_AT(i+1) = 6000;
-                PORT_AT(i+2) = -6000;
+		break;
+
+///// { "op": 161, "label": "Line Sensor", "outputs": [{"label": "L", "type": "bool"}, {"label": "R", "type": "bool"}] },
+	    case 161:
+		PORT_AT(i+1) = 0;
+                PORT_AT(i+2) = 1;
                 i += 3;
-                break;
-            case OP_LIGHT:
-                PORT_AT(i+1) = 600;
+		break;
+
+///// { "op": 162, "label": "Ambient Light", "outputs": [{}] },
+	    case 162:
+		PORT_AT(i+1) = 0;
                 i += 2;
                 break;
-            case OP_MOTORL:
+
+///// { "op": 176, "label": "Motor (Left)", "inputs": [{}] },
+            case 176:
                 if (PORT_AT(i+1) >= 100) {
                     GPIO_OUTPUT_SET(4,1);
                     GPIO_OUTPUT_SET(5,0);
@@ -117,7 +86,9 @@ void virtual_exec(virtual_prog_t *prog) {
                 }
                 i += 2;
                 break;
-            case OP_MOTORR:
+
+///// { "op": 177, "label": "Motor (Right)", "inputs": [{}] },
+            case 177:
                 if (PORT_AT(i+1) >= 100) {
                     GPIO_OUTPUT_SET(7,1);
                     GPIO_OUTPUT_SET(8,0);
@@ -130,18 +101,109 @@ void virtual_exec(virtual_prog_t *prog) {
                 }
                 i += 2;
                 break;
-            case OP_LEDS:
+
+///// { "op": 178, "label": "Divide", "inputs": [{ "label": "R", "type": "bool" }, { "label": "G", "type": "bool" }, { "label": "B", "type": "bool" }] },
+            case 178:
                 GPIO_OUTPUT_SET(16, PORT_AT(i+1) <= 0 ? 1 : 0);
                 GPIO_OUTPUT_SET(2, PORT_AT(i+3) <= 0 ? 1 : 0);
                 i += 4;
                 break;
+
+///// { "op": 224, "label": "Add", "inputs": [{}, {}], "outputs": [{}] },
+            case 224:
+                PORT_AT(i+3) = PORT_AT(i+1) + PORT_AT(i+2);
+                i += 4;
+                break;
+
+///// { "op": 225, "label": "Subtract", "inputs": [{}, {}], "outputs": [{}] },
+            case 225:
+                PORT_AT(i+3) = PORT_AT(i+1) - PORT_AT(i+2);
+                i += 4;
+                break;
+
+///// { "op": 226, "label": "Multiply", "inputs": [{}, {}], "outputs": [{}] },
+            case 226:
+                PORT_AT(i+3) = (int16_t)((int32_t)PORT_AT(i+1) * PORT_AT(i+2) / 100);
+                i += 4;
+                break;
+
+///// { "op": 227, "label": "Divide", "inputs": [{}, {}], "outputs": [{}] },
+            case 227:
+                PORT_AT(i+3) = (int16_t)((int32_t)PORT_AT(i+1) * 100 / PORT_AT(i+2));
+                i += 4;
+                break;
+
+///// { "op": 228, "label": "Maximum", "inputs": [{}, {}], "outputs": [{}] },
+            case 228:
+                PORT_AT(i+3) = MAX(PORT_AT(i+1), PORT_AT(i+2));
+                i += 4;
+                break;
+
+///// { "op": 229, "label": "Minimum", "inputs": [{}, {}], "outputs": [{}] },
+            case 229:
+                PORT_AT(i+3) = MIN(PORT_AT(i+1), PORT_AT(i+2));
+                i += 4;
+                break;
+
+///// { "op": 230, "label": "Flip-flop", "inputs": [{"label":"S","type":"bool"}, {"label":"R","type":"bool"}], "outputs": [{"label":"Q","type":"bool"}, {"label":"Q","type":"bool","invert":true}] },
+            case 230:
+                if (PORT_AT(i+1) > PORT_AT(i+2)) {
+                    PORT_AT(i+3) = 100; PORT_AT(i+4) = 0;
+                } else if (PORT_AT(i+1) < PORT_AT(i+2)) {
+                    PORT_AT(i+3) = 0; PORT_AT(i+4) = 100;
+                } else if (PORT_AT(i+3) == 0) {
+                    PORT_AT(i+4) = 100;
+                } else if (PORT_AT(i+4) == 0) {
+                    PORT_AT(i+3) = 100;
+                }
+                i += 5;
+                break;
+
+///// { "op": 231, "label": "Compare", "inputs": [{}, {}], "outputs": [{"label":"<","type":"bool"},{"label":"=","type":"bool"},{"label":">","type":"bool"}] },
+	    case 231:
+                PORT_AT(i+3) = PORT_AT(i+1) < PORT_AT(i+2);
+                PORT_AT(i+4) = PORT_AT(i+1) == PORT_AT(i+2);
+                PORT_AT(i+5) = PORT_AT(i+1) > PORT_AT(i+2);
+                i += 6;
+                break;
+
+///// { "op": 232, "label": "And", "inputs": [{}, {}], "outputs": [{}] },
+            case 232:
+                PORT_AT(i+3) = PORT_AT(i+1) && PORT_AT(i+2);
+                i += 4;
+                break;
+
+///// { "op": 233, "label": "Or", "inputs": [{}, {}], "outputs": [{}] },
+            case 233:
+                PORT_AT(i+3) = PORT_AT(i+1) || PORT_AT(i+2);
+                i += 4;
+                break;
+
+///// { "op": 234, "label": "Not", "inputs": [{}], "outputs": [{}] },
+            case 234:
+                PORT_AT(i+2) = !PORT_AT(i+1);
+                i += 3;
+                break;
+
+///// { "op": 235, "label": "If/Then/Else", "inputs": [{"type":"bool"}, {}, {}], "outputs": [{}] },
+	    case 235:
+                PORT_AT(i+4) = PORT_AT(i+1) ? PORT_AT(i+2) : PORT_AT(i+3);
+                i += 5;
+                break;
+
+///// { "op": 255, "label": "Variable", "outputs": [{}], "variable": true }
+            case 255:
+                PORT_AT(i+1) = ((int16_t)prog->codes[i+2] << 8) + prog->codes[i+3];
+                i += 4;
+                break;
+
             default:
                 return;
         }
         prog->ports[0] = 0;
     }
 }
-   
+///// ]   
 size_t virtual_dump_bin_size(virtual_prog_t *prog) {
     return 2 * 256;
 }

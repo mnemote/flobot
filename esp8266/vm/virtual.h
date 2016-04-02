@@ -6,27 +6,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-// XXX This has to be kept aligned with "opcodes.json" which is 
-//     not great, but my cpp-fu is not sufficient to think of a 
-//     better way
-
-typedef enum opcodes_e {
-    OP_RANGE = 160,
-    OP_LINES = 161,
-    OP_LIGHT = 162,
-    OP_MOTORL = 176,
-    OP_MOTORR = 177,
-    OP_LEDS = 178,
-    OP_ADD = 224,
-    OP_SUB = 225,
-    OP_MUL = 226,
-    OP_DIV = 227,
-    OP_MAX = 228,
-    OP_MIN = 229,
-    OP_FLIPFLOP = 230,
-    OP_VAL16 = 255,
-} opcodes_t;
-    
 typedef struct virtual_prog_s {
     uint8_t codes[256];
     int16_t ports[256];

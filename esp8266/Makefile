@@ -169,11 +169,12 @@ $1/%.o: %.S
 	$(CC) $(INCDIR) $(MODULE_INCDIR) $(EXTRA_INCDIR) $(SDK_INCDIR) $(CFLAGS)  -c $$< -o $$@
 endef
 
-.PHONY: all copyfiles checkdirs clean libesphttpd default-tgt
+.PHONY: all checkdirs clean libesphttpd default-tgt
 
 all: checkdirs copyfiles $(TARGET_OUT) $(FW_BASE)
 
 copyfiles:
+	perl -nle 'print if s/\/\/\/\/\///' < vm/virtual.c > ../www/opcodes.json
 	cp -r ../www/* ./html
 
 libesphttpd/Makefile:
