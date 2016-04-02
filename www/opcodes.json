@@ -13,9 +13,9 @@
  { "op": 229, "label": "Minimum", "inputs": [{}, {}], "outputs": [{}] },
  { "op": 230, "label": "Flip-flop", "inputs": [{"label":"S","type":"bool"}, {"label":"R","type":"bool"}], "outputs": [{"label":"Q","type":"bool"}, {"label":"Q","type":"bool","invert":true}] },
  { "op": 231, "label": "Compare", "inputs": [{}, {}], "outputs": [{"label":"<","type":"bool"},{"label":"=","type":"bool"},{"label":">","type":"bool"}] },
- { "op": 232, "label": "And", "inputs": [{}, {}], "outputs": [{}] },
- { "op": 233, "label": "Or", "inputs": [{}, {}], "outputs": [{}] },
- { "op": 234, "label": "Not", "inputs": [{}], "outputs": [{}] },
+ { "op": 232, "label": "And", "inputs": [{"type":"bool"}, {"type":"bool"}], "outputs": [{"type":"bool"}] },
+ { "op": 233, "label": "Or", "inputs": [{"type":"bool"}, {"type":"bool"}], "outputs": [{"type":"bool"}] },
+ { "op": 234, "label": "Not", "inputs": [{"type":"bool"}], "outputs": [{"type":"bool"}] },
  { "op": 235, "label": "If/Then/Else", "inputs": [{"type":"bool"}, {}, {}], "outputs": [{}] },
  { "op": 255, "label": "Variable", "outputs": [{}], "variable": true },
  { "op": 255, "label": "Variable", "outputs": [{ "type": "bool"}], "variable": true }

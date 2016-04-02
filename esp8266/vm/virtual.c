@@ -163,19 +163,19 @@ void virtual_exec(virtual_prog_t *prog) {
                 i += 6;
                 break;
 
-///// { "op": 232, "label": "And", "inputs": [{}, {}], "outputs": [{}] },
+///// { "op": 232, "label": "And", "inputs": [{"type":"bool"}, {"type":"bool"}], "outputs": [{"type":"bool"}] },
             case 232:
                 PORT_AT(i+3) = PORT_AT(i+1) && PORT_AT(i+2);
                 i += 4;
                 break;
 
-///// { "op": 233, "label": "Or", "inputs": [{}, {}], "outputs": [{}] },
+///// { "op": 233, "label": "Or", "inputs": [{"type":"bool"}, {"type":"bool"}], "outputs": [{"type":"bool"}] },
             case 233:
                 PORT_AT(i+3) = PORT_AT(i+1) || PORT_AT(i+2);
                 i += 4;
                 break;
 
-///// { "op": 234, "label": "Not", "inputs": [{}], "outputs": [{}] },
+///// { "op": 234, "label": "Not", "inputs": [{"type":"bool"}], "outputs": [{"type":"bool"}] },
             case 234:
                 PORT_AT(i+2) = !PORT_AT(i+1);
                 i += 3;
