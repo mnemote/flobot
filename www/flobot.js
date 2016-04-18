@@ -48,6 +48,10 @@ window.onload = function () {
         return element;
     }
 
+    function new_svg_element(tagName, attributes, textContent) { 
+        return new_element(svg_xmlns, tagName, attributes, textContent);
+    }
+
     // EDGE
    
     var Edge = function(port_src, port_dst) {
@@ -87,8 +91,7 @@ window.onload = function () {
 
     Edge.prototype.init = function(svg_parent) {
         this.svg_parent = svg_parent;
-        this.svg_spline = document.createElementNS(svg_xmlns, 'path');
-        this.svg_spline.setAttribute('class', 'edge');
+        this.svg_spline = new_svg_element('path', [['class','edge']]);
         this.svg_parent.insertBefore(this.svg_spline, svg_parent.firstChild);
     }   
     
@@ -96,7 +99,7 @@ window.onload = function () {
         this.svg_spline.remove();
     }
 
-    Edge.prototype.delete = function() {
+    Edge.prototype.remove = function() {
         this.port_src.edges = this.port_src.edges.filter(function (e) { return e != this }, this);
         this.port_dst.edges = this.port_dst.edges.filter(function (e) { return e != this }, this);
         this.port_dst.port_id = null;
@@ -189,28 +192,30 @@ window.onload = function () {
     Port.prototype.init = function(svg_group) {
         this.svg_group = svg_group;
         if (this.type == 'bool') {
-            this.svg_port = document.createElementNS(svg_xmlns, 'rect');
-            this.svg_port.setAttribute('class', 'port');
-            this.svg_port.setAttribute('x', this.offset_x - 12);
-            this.svg_port.setAttribute('y', this.offset_y - 12);
-            this.svg_port.setAttribute('width', 24);
-            this.svg_port.setAttribute('height', 24);
-            this.svg_port.setAttribute('rx', 5);
+            this.svg_port = new_svg_element('rect', [
+	        ['class', 'port'],
+                ['x', this.offset_x - 12],
+                ['y', this.offset_y - 12],
+                ['width', 24],
+                ['height', 24],
+                ['rx', 5]
+            ]);
         } else {
-            this.svg_port = document.createElementNS(svg_xmlns, 'circle');
-            this.svg_port.setAttribute('class', 'port');
-            this.svg_port.setAttribute('cx', this.offset_x);
-            this.svg_port.setAttribute('cy', this.offset_y);
-            this.svg_port.setAttribute('r', 12);
+            this.svg_port = new_svg_element('circle', [
+                ['class', 'port'],
+                ['cx', this.offset_x],
+                ['cy', this.offset_y],
+                ['r', 12]
+            ]);
         }
         this.svg_port._target = this;
         svg_group.appendChild(this.svg_port);
         if (this.label) {
-            this.svg_label = document.createElementNS(svg_xmlns, 'text');
-            this.svg_label.textContent = this.label;
-            this.svg_label.setAttribute('class', this.invert ? 'port invert' : 'port');
-            this.svg_label.setAttribute('x', this.offset_x);
-            this.svg_label.setAttribute('y', this.offset_y);
+            this.svg_label = new_svg_element('text', [
+                ['class', this.invert ? 'port invert' : 'port'],
+                ['x', this.offset_x],
+                ['y', this.offset_y]
+            ], this.label);
             this.svg_label._target = this;
             svg_group.appendChild(this.svg_label);
         }
@@ -221,7 +226,7 @@ window.onload = function () {
     }
 
     Port.prototype.remove_edges = function() {
-        this.edges.forEach(function (e) { e.deinit(); e.delete(); });
+        this.edges.forEach(function (e) { e.deinit(); e.remove(); });
     }
 
     Port.prototype.create_edge = function(other) {
@@ -240,10 +245,11 @@ window.onload = function () {
 
     Port.prototype.show_value = function(value) {
         if (!this.svg_value) {
-            this.svg_value = document.createElementNS(svg_xmlns, 'text');
-            this.svg_value.setAttribute('class', 'edge');
-            this.svg_value.setAttribute('x', this.offset_x);
-            this.svg_value.setAttribute('y', this.offset_y + 30);
+            this.svg_value = create_svg_element('text', [
+                ['class', 'edge'],
+                ['x', this.offset_x],
+                ['y', this.offset_y + 30]
+            ]);
             this.svg_group.appendChild(this.svg_value);
         }
         this.svg_value.textContent = value;
@@ -286,7 +292,7 @@ window.onload = function () {
                 p.edges.forEach(function (e) {
                     if (e.port_dst.node.order <= other.order) {
                         e.deinit();
-                        e.delete();
+                        e.remove();
                     } else {
                         e.port_dst.node.reorder(this);
                     }
@@ -359,8 +365,7 @@ window.onload = function () {
     }
 
     Node.prototype.init = function(svg_element) {
-        this.svg_group = document.createElementNS(svg_xmlns, 'g');
-        this.svg_group.setAttribute('class', 'node');
+        this.svg_group = new_svg_element('g', [['class', 'node']])
         svg_element.appendChild(this.svg_group);
         
         var w = this.geometry.width || 150;
@@ -368,10 +373,11 @@ window.onload = function () {
         var r = this.geometry.corner || (h/10);
 
         if (this.variable) {
-            var s = document.createElementNS(svg_xmlns, 'rect');
-            s.setAttribute('width', w);
-            s.setAttribute('height', h);
-            s.setAttribute('rx', h/2);
+            var s = new_svg_element('rect', [
+		['width', w],
+		['height', h],
+		['rx', h/2]
+	    ]);
             s._target = this;
             this.svg_group.appendChild(s);
 
@@ -399,27 +405,27 @@ window.onload = function () {
 
             }
         } else if (this.input_ports.length && this.output_ports.length) {
-            var svg_rect = document.createElementNS(svg_xmlns, 'rect');
-            svg_rect.setAttribute('width', w);
-            svg_rect.setAttribute('height', h);
-            svg_rect.setAttribute('rx', r);
+            var svg_rect = new_svg_element('rect', [
+		['width', w],
+		['height', h],
+		['rx', r]
+	    ]);
             svg_rect._target = this;
             this.svg_group.appendChild(svg_rect);
         } else {
-            var svg_path = document.createElementNS(svg_xmlns, 'path');
             var path_d = (this.output_ports.length) ?
                 ['M',0,h/2,'A',w/2,h/2,0,0,1,w,h/2,'L',w,h-r,'A',r,r,0,0,1,w-r,h,'L',r,h,'A',r,r,0,0,1,0,h-r,'Z'] :
                 ['M',0,h/2,'A',w/2,h/2,1,0,0,w,h/2,'L',w,r,'A',r,r,0,0,0,w-r,0,'L',r,0,'A',r,r,0,0,0,0,r,'Z'];
-            svg_path.setAttribute('d', path_d.join(' '));
+            var svg_path = new_svg_element('path', [['d', path_d.join(' ')]]);
             svg_path._target = this;
             this.svg_group.appendChild(svg_path);
         }
 
         if (!this.html_input) {
-            this.svg_label = document.createElementNS(svg_xmlns, 'text');
-            this.svg_label.textContent = this.json.label;
-            this.svg_label.setAttribute('x', w/2);
-            this.svg_label.setAttribute('y', h/2);
+            this.svg_label = new_svg_element('text', [
+		['x', w/2],
+		['y', h/2],
+	    ], this.json.label);
             this.svg_label._target = this;
             this.svg_group.appendChild(this.svg_label);
         }
@@ -480,10 +486,11 @@ window.onload = function () {
     }
     
     Prog.prototype.init = function(html_element) {
-        this.svg_element = document.createElementNS(svg_xmlns, 'svg');
-        this.svg_element.setAttribute('height', '100%');
-        this.svg_element.setAttribute('width', '100%');
+        this.svg_element = new_svg_element('svg', [
+            ['style', 'width: 100%; height: 100%']
+        ]);
         html_element.appendChild(this.svg_element);
+        var rect = this.svg_element.getBoundingClientRect();
 
         this.nodes.filter(function (node) {
             return node.input_ports.length == 0 && node.output_ports.length > 0 && !node.variable;
@@ -497,7 +504,7 @@ window.onload = function () {
             return node.input_ports.length > 0 && node.output_ports.length == 0;
         }).forEach(function (node, n) {
             node.geometry.x = 25 + n * 175;
-            node.geometry.y = this.svg_element.clientHeight - 85;
+            node.geometry.y = rect.height - 85;
             node.init(this.svg_element);
         }, this);
 
@@ -505,19 +512,20 @@ window.onload = function () {
         this.nodes.filter(function (node) {
             return (node.input_ports.length > 0 && node.output_ports.length > 0) || node.variable;
         }).forEach(function (node, n) {
-            node.geometry.x = this.svg_element.clientWidth - 328 + (160 * (n % 2));
+            node.geometry.x = rect.width - 328 + (160 * (n % 2));
             node.geometry.y = Math.floor(n/2) * 85 + 25;
             node.toolbox = true;
             node.init(this.svg_element);
             n_ops = n;
         }, this);
-        var toolbox = document.createElementNS(svg_xmlns, 'rect');
-        toolbox.setAttribute('class', 'toolbox');
-        toolbox.setAttribute('x', this.svg_element.clientWidth - 342);
-        toolbox.setAttribute('y', 5);
-        toolbox.setAttribute('width', 340);
-        toolbox.setAttribute('height', Math.ceil((n_ops-1)/2) * 85 + 100);
-        toolbox.setAttribute('rx', 10);
+        var toolbox = new_svg_element('rect', [
+            ['class', 'toolbox'],
+            ['x', rect.width - 342],
+            ['y', 5],
+            ['width', 340],
+            ['height', Math.ceil((n_ops-1)/2) * 85 + 100],
+            ['rx', 10]
+        ]);
         this.svg_element.insertBefore(toolbox, this.svg_element.firstChild);
         
         var drag_target = null;
