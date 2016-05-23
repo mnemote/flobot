@@ -245,7 +245,7 @@ window.onload = function () {
 
     Port.prototype.show_value = function(value) {
         if (!this.svg_value) {
-            this.svg_value = create_svg_element('text', [
+            this.svg_value = new_svg_element('text', [
                 ['class', 'edge'],
                 ['x', this.offset_x],
                 ['y', this.offset_y + 30]
@@ -478,7 +478,9 @@ window.onload = function () {
             }, this);
 
             if (poll_timer) clearTimeout(poll_timer);
-            poll_timer = setTimeout(function () { prog.poll() }, 1000);
+            poll_timer = setTimeout(this.poll.bind(this), 1000);
+        } else {
+            if (poll_timer) clearTimeout(poll_timer);
         }
 
         var s = this.serialize(true) + "\n\n" + (status == 200 ? text : status);
@@ -593,8 +595,9 @@ window.onload = function () {
         return nodes.map(function (n) {
             if (n.variable) {
                 var v = n.variable_value * 100;
-                return to_hex_byte(n.json.op) + to_hex_byte(v >> 8) +
-                       to_hex_byte(v & 0xFF) + to_hex_byte(n.output_ports[0].port_id || 0);
+                if (v < 0) v += 65536;
+                return to_hex_byte(n.json.op) + (whitespace ? " " : "") + to_hex_byte(v >> 8) +
+                       to_hex_byte(v & 0xFF) + (whitespace ? " " : "") + to_hex_byte(n.output_ports[0].port_id || 0);
             } else {
                 return to_hex_byte(n.json.op) +
                     n.input_ports.map(function (p) {
