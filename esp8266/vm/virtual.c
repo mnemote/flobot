@@ -1,12 +1,13 @@
 //#include <stdio.h>
+#include <ets_sys.h>
 #include <c_types.h>
 #include <string.h>
 #include <strings.h>
 #include <gpio.h>
+#include <osapi.h>
+#include <os_type.h>
 #include <user_interface.h>
-
-// XXX Is this really not defined *somewhere*?
-int ets_sprintf(char *str, const char *format, ...)  __attribute__ ((format (printf, 2, 3)));
+#include <../espmissingincludes.h>
 
 #include "virtual.h"
 
@@ -14,6 +15,31 @@ int ets_sprintf(char *str, const char *format, ...)  __attribute__ ((format (pri
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #define FROM_HEX(c) ('0' <= (c) && c <= '9' ? (c) - '0' : ((c) & 31) + 9)
 
+// None of this stepper stuff should be here, it should be its own file.
+
+int8_t stepper_states[] = { 8, 12, 4, 6, 2, 3, 1, 9 };
+
+typedef struct stepper_s {
+    int8_t pin_a, pin_b, pin_c, pin_d;
+    int8_t phase;
+    int8_t direction;
+} stepper_t;
+   
+stepper_t step_left = { 13, 14, 16, 12, 0, 0 };
+stepper_t step_right = { 0, 5, 4, 2, 0, 0 };
+
+void stepper_update(stepper_t *x) {
+    x->phase = (x->phase + x->direction) % 8;
+    int8_t state = x->direction ? stepper_states[x->phase] : 0;
+    GPIO_OUTPUT_SET(x->pin_a, (state & 8) ? 1 : 0);
+    GPIO_OUTPUT_SET(x->pin_b, (state & 4) ? 1 : 0);
+    GPIO_OUTPUT_SET(x->pin_c, (state & 2) ? 1 : 0);
+    GPIO_OUTPUT_SET(x->pin_d, (state & 1) ? 1 : 0);
+}
+
+// end stepper stuff
+
+//static os_timer_t tick_timer;
 
 void virtual_load_bin(virtual_prog_t *prog, uint8_t *buf, size_t bufsiz) {
     bzero(prog->codes, sizeof(prog->codes));
@@ -105,6 +131,22 @@ void virtual_exec(virtual_prog_t *prog) {
                 i += 4;
                 break;
 
+///// { "op": 179, "label": "Stepper (Left)", "inputs": [{}] },
+            case 179:
+                step_left.direction = (PORT_AT(i+1) < -100) ? -1 :
+                    (PORT_AT(i+1) > 100) ? 1 : 0;
+                stepper_update(&step_left);
+                i += 2;
+                break;
+                
+///// { "op": 180, "label": "Stepper (Right)", "inputs": [{}] },
+            case 180:
+                step_right.direction = (PORT_AT(i+1) < -100) ? -1 :
+                    (PORT_AT(i+1) > 100) ? 1 : 0;
+                stepper_update(&step_right);
+                i += 2;
+                break;
+
 ///// { "op": 224, "label": "Add", "inputs": [{}, {}], "outputs": [{}] },
             case 224:
                 PORT_AT(i+3) = PORT_AT(i+1) + PORT_AT(i+2);
@@ -190,7 +232,7 @@ void virtual_exec(virtual_prog_t *prog) {
 ///// { "op": 255, "label": "Variable", "outputs": [{}], "variable": true },
 ///// { "op": 255, "label": "Variable", "outputs": [{ "type": "bool"}], "variable": true }
             case 255:
-                PORT_AT(i+1) = ((int16_t)prog->codes[i+2] << 8) + prog->codes[i+3];
+                PORT_AT(i+3) = ((int16_t)prog->codes[i+1] << 8) + prog->codes[i+2];
                 i += 4;
                 break;
 

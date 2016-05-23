@@ -7,6 +7,7 @@ I'll add bits back in as I need them ... */
 #include "espfs.h"
 #include "webpages-espfs.h"
 #include "../vm/virtual.h"
+#include <eagle_soc.h>
 
 virtual_prog_t VM = {{0}};
 
@@ -55,8 +56,8 @@ void vmExecCb() {
 }
 
 void user_init(void) {
-    const char ssid[32] = "NotMyAP";
-    const char password[64] = "NotMyPassword";
+    const char ssid[32] = "ZOIC3";
+    const char password[64] = "dormouse";
 
     struct station_config stationConf = {{0}};
 
@@ -76,5 +77,13 @@ void user_init(void) {
 
     os_timer_disarm(&vmExecTimer);
     os_timer_setfn(&vmExecTimer, vmExecCb, NULL);
-    os_timer_arm(&vmExecTimer, 100, 1);
+    os_timer_arm(&vmExecTimer, 20, 1);
+
+    gpio_init();
+    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDI_U, FUNC_GPIO12);
+    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_GPIO13);
+    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTMS_U, FUNC_GPIO14);
+    //WRITE_PERI_REG(RTC_GPIO_CONF, READ_PERI_REG(RTC_GPIO_CONF) & ~1);
+    //WRITE_PERI_REG(RTC_GPIO_ENABLE, (READ_PERI_REG(RTC_GPIO_ENABLE) & ~1) | out_en);
+
 }

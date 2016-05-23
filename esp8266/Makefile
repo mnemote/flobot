@@ -132,7 +132,7 @@ $(FW_BASE): $(TARGET_OUT)
 	mkdir -p $@
 	$(ESPTOOL) elf2image $(TARGET_OUT) --output $@/
 
-flash: $(TARGET_OUT) $(FW_BASE)
+flash: $(TARGET_OUT) copyfiles $(FW_BASE)
 	$(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(ESPTOOL_FLASHDEF) 0x00000 $(FW_BASE)/0x00000.bin 0x40000 $(FW_BASE)/0x40000.bin
 
 blankflash:

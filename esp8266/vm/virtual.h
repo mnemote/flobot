@@ -12,7 +12,7 @@ typedef struct virtual_prog_s {
 } virtual_prog_t;
 
 
-virtual_prog_t *virtual_init();
+void virtual_init(virtual_prog_t *prog);
 
 void virtual_load_bin(virtual_prog_t *prog, uint8_t *buf, size_t bufsiz);
 
