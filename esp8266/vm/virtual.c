@@ -17,20 +17,20 @@
 
 // None of this stepper stuff should be here, it should be its own file.
 
-int8_t stepper_states[] = { 8, 12, 4, 6, 2, 3, 1, 9 };
+uint8_t stepper_states[] = { 8, 12, 4, 6, 2, 3, 1, 9 };
 
 typedef struct stepper_s {
-    int8_t pin_a, pin_b, pin_c, pin_d;
-    int8_t phase;
+    uint8_t pin_a, pin_b, pin_c, pin_d;
+    uint8_t phase;
     int8_t direction;
 } stepper_t;
    
-stepper_t step_left = { 13, 14, 16, 12, 0, 0 };
+stepper_t step_left = { 13, 14, 15, 12, 0, 0 };
 stepper_t step_right = { 0, 5, 4, 2, 0, 0 };
 
 void stepper_update(stepper_t *x) {
-    x->phase = (x->phase + x->direction) % 8;
-    int8_t state = x->direction ? stepper_states[x->phase] : 0;
+    x->phase = (x->phase + x->direction) & 7;
+    uint8_t state = x->direction ? stepper_states[x->phase] : 0;
     GPIO_OUTPUT_SET(x->pin_a, (state & 8) ? 1 : 0);
     GPIO_OUTPUT_SET(x->pin_b, (state & 4) ? 1 : 0);
     GPIO_OUTPUT_SET(x->pin_c, (state & 2) ? 1 : 0);
