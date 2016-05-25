@@ -252,11 +252,15 @@ window.onload = function () {
             ]);
             this.svg_group.appendChild(this.svg_value);
         }
-        this.svg_value.textContent = value;
+        this.svg_value.textContent = (this.type == 'bool') ?
+            (value ? "True" : "False") : value;
     }
 
     Port.prototype.hide_value = function() {
-        if (this.svg_value) this.svg_value.remove();
+        if (this.svg_value) {
+            this.svg_value.remove();
+            this.svg_value = null;
+        }
     }
 
     // NODE
@@ -383,6 +387,7 @@ window.onload = function () {
 
             if (!this.toolbox) {
                 this.html_input = document.createElement('input');
+                this.html_input._target = this;
                 if (this.output_ports[0].type == 'bool') {
                     this.html_input.setAttribute('type', 'checkbox');
                     this.html_input.addEventListener('change', function (e) {
@@ -471,8 +476,7 @@ window.onload = function () {
             }
             this.nodes.forEach(function (n) {
                 n.output_ports.forEach(function (p) {
-                    if (p.port_id && ports_dict[p.port_id])
-                        p.show_value(ports_dict[p.port_id]);
+                    if (p.port_id) p.show_value(ports_dict[p.port_id] || 0);
                     else p.hide_value();
                 }, this);
             }, this);
