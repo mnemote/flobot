@@ -22,19 +22,37 @@ uint8_t stepper_states[] = { 8, 12, 4, 6, 2, 3, 1, 9 };
 typedef struct stepper_s {
     uint8_t pin_a, pin_b, pin_c, pin_d;
     uint8_t phase;
-    int8_t direction;
+    int8_t drive;
 } stepper_t;
    
 stepper_t step_left = { 13, 14, 15, 12, 0, 0 };
 stepper_t step_right = { 0, 5, 4, 2, 0, 0 };
 
 void stepper_update(stepper_t *x) {
-    x->phase = (x->phase + x->direction) & 7;
-    uint8_t state = x->direction ? stepper_states[x->phase] : 0;
+    if (x->drive > 0) x->phase++;
+    else if (x->drive < 0) x->phase--;
+    x->phase &= 7;
+    uint8_t state = x->drive ? stepper_states[x->phase] : 0;
     GPIO_OUTPUT_SET(x->pin_a, (state & 8) ? 1 : 0);
     GPIO_OUTPUT_SET(x->pin_b, (state & 4) ? 1 : 0);
     GPIO_OUTPUT_SET(x->pin_c, (state & 2) ? 1 : 0);
     GPIO_OUTPUT_SET(x->pin_d, (state & 1) ? 1 : 0);
+}
+
+int16_t get_range_sensor() {
+    // Not at all a good approximation should be \propto 1/V
+    int16_t range_sensor_read = system_adc_read();
+    if (range_sensor_read < 100) return 3000;
+    if (range_sensor_read > 400) return 300;
+    return 3000 - (range_sensor_read - 100) * 9;
+}
+
+int16_t _range_sensor_slow = 0;
+
+int16_t get_range_sensor_slow() {
+    int16_t v = get_range_sensor();
+    _range_sensor_slow = _range_sensor_slow * 4 / 5 + v;
+    return _range_sensor_slow / 5;
 }
 
 // end stepper stuff
@@ -61,6 +79,7 @@ void virtual_load_hex(virtual_prog_t *prog, char *buf, size_t bufsiz) {
 // elegant way of doing this -- I was trying to work out a way using cpp -- but at least
 // it preserves some locality between VM instruction definitions and implementations.
 
+    
 void virtual_exec(virtual_prog_t *prog) {
 
     // XXX There's a potential buffer overrun here too when decoding
@@ -77,7 +96,7 @@ void virtual_exec(virtual_prog_t *prog) {
 
 ///// { "op": 160, "label": "Range Sensor", "outputs": [{}] },
 	    case 160:
-                PORT_AT(i+1) = system_adc_read() & 0xFFFF;
+                PORT_AT(i+1) = get_range_sensor_slow();
                 i += 2;
 		break;
 
@@ -94,7 +113,7 @@ void virtual_exec(virtual_prog_t *prog) {
                 i += 2;
                 break;
 
-///// { "op": 176, "label": "Motor (Left)", "inputs": [{}] },
+// DISABLED /// { "op": 176, "label": "Motor (Left)", "inputs": [{}] },
             case 176:
                 if (PORT_AT(i+1) >= 100) {
                     GPIO_OUTPUT_SET(4,1);
@@ -109,7 +128,7 @@ void virtual_exec(virtual_prog_t *prog) {
                 i += 2;
                 break;
 
-///// { "op": 177, "label": "Motor (Right)", "inputs": [{}] },
+// DISABLED /// { "op": 177, "label": "Motor (Right)", "inputs": [{}] },
             case 177:
                 if (PORT_AT(i+1) >= 100) {
                     GPIO_OUTPUT_SET(7,1);
@@ -124,27 +143,47 @@ void virtual_exec(virtual_prog_t *prog) {
                 i += 2;
                 break;
 
-///// { "op": 178, "label": "LEDs", "inputs": [{ "label": "R", "type": "bool" }, { "label": "G", "type": "bool" }, { "label": "B", "type": "bool" }] },
+// DISABLED /// { "op": 178, "label": "LEDs", "inputs": [{ "label": "R", "type": "bool" }, { "label": "G", "type": "bool" }, { "label": "B", "type": "bool" }] },
             case 178:
                 GPIO_OUTPUT_SET(16, PORT_AT(i+1) <= 0 ? 1 : 0);
                 GPIO_OUTPUT_SET(2, PORT_AT(i+3) <= 0 ? 1 : 0);
                 i += 4;
                 break;
 
-///// { "op": 179, "label": "Stepper (Left)", "inputs": [{}] },
+// DISABLED /// { "op": 179, "label": "Stepper (Left)", "inputs": [{}] },
             case 179:
-                step_left.direction = (PORT_AT(i+1) < -100) ? -1 :
-                    (PORT_AT(i+1) > 100) ? 1 : 0;
+                if (PORT_AT(i+1) < -100) step_left.drive = -32;
+                else if (PORT_AT(i+1) > 100) step_left.drive = +32;
+                else step_left.drive = 0;
                 stepper_update(&step_left);
                 i += 2;
                 break;
                 
-///// { "op": 180, "label": "Stepper (Right)", "inputs": [{}] },
+// DISBALED /// { "op": 180, "label": "Stepper (Right)", "inputs": [{}] },
             case 180:
-                step_right.direction = (PORT_AT(i+1) < -100) ? -1 :
-                    (PORT_AT(i+1) > 100) ? 1 : 0;
+                if (PORT_AT(i+1) < -100) step_right.drive = -32;
+                else if (PORT_AT(i+1) > 100) step_right.drive = +32;
+                else step_right.drive = 0;
                 stepper_update(&step_right);
                 i += 2;
+                break;
+
+///// { "op": 181, "label": "Left Wheel", "inputs": [{ "label": "FWD", "type": "bool" }, { "label": "REV", "type": "bool" }] },
+            case 181:
+                if (PORT_AT(i+1) > PORT_AT(i+2)) step_left.drive = +32;
+                else if (PORT_AT(i+1) < PORT_AT(i+2)) step_left.drive = -32;
+                else step_left.drive = 0;
+                stepper_update(&step_left);
+                i += 3;
+                break;
+
+///// { "op": 182, "label": "Right Wheel", "inputs": [{ "label": "FWD", "type": "bool" }, { "label": "REV", "type": "bool" }] },
+            case 182:
+                if (PORT_AT(i+1) > PORT_AT(i+2)) step_right.drive = +32;
+                else if (PORT_AT(i+1) < PORT_AT(i+2)) step_right.drive = -32;
+                else step_right.drive = 0;
+                stepper_update(&step_right);
+                i += 3;
                 break;
 
 ///// { "op": 224, "label": "Add", "inputs": [{}, {}], "outputs": [{}] },
@@ -165,7 +204,7 @@ void virtual_exec(virtual_prog_t *prog) {
                 i += 4;
                 break;
 
-///// { "op": 227, "label": "Divide", "inputs": [{}, {}], "outputs": [{}] },
+// DISABLED /// { "op": 227, "label": "Divide", "inputs": [{}, {}], "outputs": [{}] },
             case 227:
                 PORT_AT(i+3) = (int16_t)((int32_t)PORT_AT(i+1) * 100 / PORT_AT(i+2));
                 i += 4;
@@ -177,7 +216,7 @@ void virtual_exec(virtual_prog_t *prog) {
                 i += 4;
                 break;
 
-///// { "op": 229, "label": "Minimum", "inputs": [{}, {}], "outputs": [{}] },
+// DISABLED /// { "op": 229, "label": "Minimum", "inputs": [{}, {}], "outputs": [{}] },
             case 229:
                 PORT_AT(i+3) = MIN(PORT_AT(i+1), PORT_AT(i+2));
                 i += 4;

@@ -13,7 +13,7 @@ virtual_prog_t VM = {{0}};
 
 
 int ICACHE_FLASH_ATTR cgiDump(HttpdConnData *connData) {
-    char buf[2000];
+    char buf[3000];
     virtual_dump_hex(&VM, buf);
 
     httpdStartResponse(connData, 200);
