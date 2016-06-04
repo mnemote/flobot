@@ -25,8 +25,8 @@ typedef struct stepper_s {
     int8_t drive;
 } stepper_t;
    
-stepper_t step_left = { 13, 14, 15, 12, 0, 0 };
-stepper_t step_right = { 0, 5, 4, 2, 0, 0 };
+stepper_t step_left = { 15, 12, 14, 13, 0, 0 };
+stepper_t step_right = { 2, 4, 0, 5, 0, 0 };
 
 void stepper_update(stepper_t *x) {
     if (x->drive > 0) x->phase++;
