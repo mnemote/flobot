@@ -1,5 +1,7 @@
  [
  { "op": 160, "label": "Range Sensor", "outputs": [{}] },
+ { "op": 161, "label": "Line Sensor", "outputs": [{"label": "L", "type": "bool"}, {"label": "R", "type": "bool"}] },
+ { "op": 162, "label": "Ambient Light", "outputs": [{}] },
  { "op": 181, "label": "Left Wheel", "inputs": [{ "label": "FWD", "type": "bool" }, { "label": "REV", "type": "bool" }] },
  { "op": 182, "label": "Right Wheel", "inputs": [{ "label": "FWD", "type": "bool" }, { "label": "REV", "type": "bool" }] },
  { "op": 224, "label": "Add", "inputs": [{}, {}], "outputs": [{}] },
