@@ -8,11 +8,12 @@ I'll add bits back in as I need them ... */
 #include "webpages-espfs.h"
 #include "../vm/virtual.h"
 #include <eagle_soc.h>
+#include "cgiwebsocket.h"
 
 virtual_prog_t VM = {{0}};
+Websock *WS = NULL;
 
-
-int ICACHE_FLASH_ATTR cgiDump(HttpdConnData *connData) {
+/*int ICACHE_FLASH_ATTR cgiDump(HttpdConnData *connData) {
     char buf[3000];
     virtual_dump_hex(&VM, buf);
 
@@ -36,15 +37,36 @@ int ICACHE_FLASH_ATTR cgiLoadBin(HttpdConnData *connData) {
 int ICACHE_FLASH_ATTR cgiLoadHex(HttpdConnData *connData) {
     virtual_load_hex(&VM, connData->post->buff, (unsigned)connData->post->buffLen);
     return cgiExec(connData);
+}*/
+
+void myWebsocketRecv(Websock *ws, char *data, int len, int flags) {
+    if (len > 0) {
+        virtual_load_hex(&VM, data, len);
+        virtual_exec(&VM);
+    }
+   
+    char buf[3000]; 
+    int len2 = virtual_dump_hex_size(&VM);
+    virtual_dump_hex(&VM, buf);
+    cgiWebsocketSend(ws, buf, len2, WEBSOCK_FLAG_NONE);
+}
+
+void myWebsocketClose(Websock *ws) {
+}
+
+void myWebsocketConnect(Websock *ws) {
+    ws->recvCb = myWebsocketRecv;
+    ws->closeCb = myWebsocketClose;
 }
 
 
 HttpdBuiltInUrl builtInUrls[]={
     {"/", cgiRedirect, "/index.html"},
-    {"/load/bin", cgiLoadBin, NULL},
+/*    {"/load/bin", cgiLoadBin, NULL},
     {"/load/hex", cgiLoadHex, NULL},
     {"/exec", cgiExec, NULL},
-    {"/dump", cgiDump, NULL},
+    {"/dump", cgiDump, NULL}, */
+    {"/ws", cgiWebsocket, myWebsocketConnect},
     {"*", cgiEspFsHook, NULL},
     {NULL, NULL, NULL}
 };
@@ -53,6 +75,12 @@ static os_timer_t vmExecTimer;
 
 void vmExecCb() {
     virtual_exec(&VM);
+    /*if (WS) {
+        char buf[3000];
+        int len = virtual_dump_hex_size(&VM);
+        virtual_dump_hex(&VM, buf);
+        cgiWebsockBroadcast("/ws", buf, len, WEBSOCK_FLAG_NONE);
+    }*/
 }
 
 void user_init(void) {

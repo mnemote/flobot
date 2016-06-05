@@ -446,6 +446,12 @@ window.onload = function () {
         this.nodes = json.map(function (n, num) {
             return new Node(this, n, num);
         }, this);
+        this.websocket = new WebSocket(
+            'ws://' + window.location.host + '/ws'
+        );
+        this.websocket.onmessage = (function(e) {
+             this.update(e.data);
+        }).bind(this);
     }
 
     Prog.prototype.node_init = function (node, n) {
@@ -454,41 +460,46 @@ window.onload = function () {
         node.init(this.svg_element);
     }
 
-    Prog.prototype.upload = function() {
-        var s = this.serialize(false);
-       ajax_post('/load/hex', s.replace(/\s+/g, ''), this.update.bind(this));
-    }
-
     var poll_timer = null;
 
-    Prog.prototype.poll = function() {
-        ajax_get('/dump', this.update.bind(this));
+    Prog.prototype.upload = function() {
+        var s = this.serialize(false);
+        //ajax_post('/load/hex', s.replace(/\s+/g, ''), this.upload_callback.bind(this));
+        this.websocket.send(s.replace(/\s+/g, ''));
+        if (!poll_timer) poll_timer = setInterval(this.poll.bind(this), 100);
     }
 
-    Prog.prototype.update = function (status,text) {
-        if (status == 200) {
-            var ports_dict = {};
-            var pp = text.split(/\s+/);
-            for (var i=0; i<pp.length; i+=2) {
-                var val = parseInt(pp[i+1], 16);
-                if (val > 0x7FFF) val -= 0x10000;
-                ports_dict[1*pp[i]] = val / 100;
-            }
-            this.nodes.forEach(function (n) {
-                n.output_ports.forEach(function (p) {
-                    if (p.port_id) p.show_value(ports_dict[p.port_id] || 0);
-                    else p.hide_value();
-                }, this);
-            }, this);
+    Prog.prototype.poll = function() {
+        //ajax_get('/dump', this.upload_callback.bind(this));
+        this.websocket.send("");
+    }
 
+    /*Prog.prototype.upload_callback = function (status, text) {
+        if (status == 200) {
+            this.update(text);
             if (poll_timer) clearTimeout(poll_timer);
             poll_timer = setTimeout(this.poll.bind(this), 1000);
         } else {
             if (poll_timer) clearTimeout(poll_timer);
         }
-
         var s = this.serialize(true) + "\n\n" + (status == 200 ? text : status);
         document.getElementById('debug').textContent = s;
+    }*/
+
+    Prog.prototype.update = function (text) {
+        var ports_dict = {};
+        var pp = text.split(/\s+/);
+        for (var i=0; i<pp.length; i+=2) {
+            var val = parseInt(pp[i+1], 16);
+            if (val > 0x7FFF) val -= 0x10000;
+            ports_dict[1*pp[i]] = val / 100;
+        }
+        this.nodes.forEach(function (n) {
+            n.output_ports.forEach(function (p) {
+                if (p.port_id) p.show_value(ports_dict[p.port_id] || 0);
+                else p.hide_value();
+            }, this);
+        }, this);
     }
     
     Prog.prototype.init = function(html_element) {
@@ -618,6 +629,7 @@ window.onload = function () {
     ajax_get('opcodes.json', function (status, data) {
         var json = JSON.parse(data);
         var prog = new Prog(json);
+
         prog.init(document.body);
     });
 
