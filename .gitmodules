@@ -1,3 +1,6 @@
 [submodule "esp8266/gdbstub"]
 	path = esp8266/gdbstub
 	url = https://github.com/espressif/esp-gdbstub
+[submodule "esp8266/libesphttpd"]
+	path = esp8266/libesphttpd
+	url = git@github.com:mnemote/libesphttpd.git
