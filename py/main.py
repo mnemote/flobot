@@ -3,6 +3,7 @@ import machine
 import ure
 import time
 import json
+import os
 
 buf = []
 http_header_re = ure.compile(r"(\w+) (\S+) (HTTP/1.[01])\s*$")
@@ -75,7 +76,7 @@ def web_server_worker(sck):
         req_body
       )
 
-      if hasattr(res_body, 'send') and 'Content-Length' not in res_headers:
+      if type(res_body) not in (str, bytes) and 'Content-Length' not in res_headers:
         keep_alive = False
       elif http_version == 'HTTP/1.0':
         keep_alive = req_headers.get(b'connection','').lower() == b'keep-alive'
@@ -98,6 +99,15 @@ def web_server_worker(sck):
             yield
         except StopIteration:
           pass
+      elif hasattr(res_body, 'read'):
+        while True:
+          if len(dat) < 500:
+            s = res_body.read(50)
+            if not s: break
+            dat += s
+          x = sck.write(dat)
+          dat = dat[x:]
+          yield
       else:
         dat += res_body
       while dat:
@@ -114,9 +124,13 @@ def web_server_worker(sck):
 
 def handle_request(http_method, http_request, req_headers, req_body):
   if http_method == 'GET':
-    http_status = 200
-    res_body = doc.encode('utf-8')
-
+    try:
+      s = os.stat(http_request)
+      http_status = 200
+      return 200, {'Content-Length': s[6]}, open(http_request, "rb")
+    except OSError:
+      http_status = 404
+      res_body = "Not found"
   elif http_method == 'POST':
     prog = req_body
     print(prog)
