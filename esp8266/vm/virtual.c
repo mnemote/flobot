@@ -8,6 +8,7 @@
 #include <os_type.h>
 #include <user_interface.h>
 #include <../espmissingincludes.h>
+#include <uart.h>
 
 #include "virtual.h"
 
