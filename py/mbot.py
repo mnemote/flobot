@@ -21,10 +21,14 @@ port.write(bytearray([
 
 def listener(vlocals):
     buf = b""
+    vlocals["line_left"] = 0
+    vlocals["line_right"] = 0
+    vlocals["ambient"] = 0
+
     while True:
-        buf += port.read()
+        r = port.read()
+        if r: buf += r
         if buf:
-            print repr(buf)
             if buf[0] == '\x91':
                 if len(buf) >= 3:
                     vlocals["line_left"] = ord(buf[1]) & 0x02
@@ -52,21 +56,7 @@ def talker(vlocals):
             #0xF5, 0x07, dr,
             0x90, (dl << 4), dr
         ])
-        print repr(buf)
         while buf:
             x = port.write(buf)
             buf = buf[x:]
             yield
-
-v = {}
-l = listener(v)
-t = talker(v)
-
-while True:
-    l.send(None)
-    t.send(None)
-
-    v["motor_left"] = -50 if v.get("line_left") else +75
-    v["motor_right"] = -50 if v.get("line_right") else +75
-
-    print repr(v)
