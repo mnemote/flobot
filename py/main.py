@@ -5,6 +5,8 @@ import time
 import json
 import os
 
+import mbot
+
 buf = []
 http_header_re = ure.compile(r"(\w+) (\S+) (HTTP/1.[01])\s*$")
 
@@ -16,7 +18,8 @@ uart = machine.UART(0, 115200)
 
 prog = None
 prog_loc = {}
-prog_glo = { "uart": uart, "time": time }
+prog_glo = {}
+
 prog_run = False
 
 def web_server(addr='0.0.0.0', port=80):
@@ -119,7 +122,7 @@ def web_server_worker(sck):
         return
   except Exception as e:
     sck.close()
-    print("ERROR: %s" % e)
+    print(repr(e))
     raise(e)
 
 def handle_request(http_method, http_request, req_headers, req_body):
@@ -134,17 +137,16 @@ def handle_request(http_method, http_request, req_headers, req_body):
       res_body = "Not found"
   elif http_method == 'POST':
     prog = req_body
-    print(prog)
     try:
       exec(prog, prog_glo, prog_loc)
       http_status = 200
       res_body = json.dumps(prog_loc)
     except Exception as e:
-      http_status = 500
+      http_status = 400
       res_body = str(e).encode('utf-8')
   else:
-    http_status = 400
-    res_body = "Bad Request"
+    http_status = 405
+    res_body = "Bad Method"
   res_headers = {
     'Content-Length': len(res_body),
     'Access-Control-Allow-Origin': '*'
@@ -152,33 +154,22 @@ def handle_request(http_method, http_request, req_headers, req_body):
   return http_status, res_headers, res_body
 
 
-def uart_reader():
-  while True:
-    r = uart.read()
-    if r is not None: buf.append(r)
-    yield
-
-def uart_writer():
-  while True:
-    msg = repr(prog_loc)
-    while msg:
-      x = uart.write(msg)
-      msg = msg[x:]
-      yield
-
 def executor():
   while True:
     if prog:
-      exec(prog, prog_glo, prog_loc)
-      prog_run = True
+      try:
+        exec(prog, prog_glo, prog_loc)
+        del prog_loc["_exception"]
+      except Exception as e:
+        prog_loc["_exception"] = str(e).encode('utf-8')
     yield
 
 def loop():
   tasks = [
     web_server('0.0.0.0', 80),
-#    uart_reader(),
-#    uart_writer(),
-    #executor(),
+    mbot.talker(prog_loc),
+    mbot.listener(prog_loc),
+    executor(),
   ]
 
   while True:
