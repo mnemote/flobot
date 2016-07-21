@@ -16,7 +16,7 @@ uart = machine.UART(0, 115200)
 
 prog = None
 prog_loc = {}
-prog_glo = { "uart": uart }
+prog_glo = { "uart": uart, "time": time }
 prog_run = False
 
 def web_server(addr='0.0.0.0', port=80):
@@ -125,9 +125,10 @@ def web_server_worker(sck):
 def handle_request(http_method, http_request, req_headers, req_body):
   if http_method == 'GET':
     try:
-      s = os.stat(http_request)
+      filename = "www/" + http_request if http_request != "/" else "www/index.html";
+      s = os.stat(filename);
       http_status = 200
-      return 200, {'Content-Length': s[6]}, open(http_request, "rb")
+      return 200, {'Content-Length': s[6]}, open(filename, "rb")
     except OSError:
       http_status = 404
       res_body = "Not found"
@@ -144,7 +145,10 @@ def handle_request(http_method, http_request, req_headers, req_body):
   else:
     http_status = 400
     res_body = "Bad Request"
-  res_headers = {'Content-Length': len(res_body)}
+  res_headers = {
+    'Content-Length': len(res_body),
+    'Access-Control-Allow-Origin': '*'
+  }
   return http_status, res_headers, res_body
 
 

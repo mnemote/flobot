@@ -57,16 +57,3 @@ def talker(vlocals):
             x = port.write(buf)
             buf = buf[x:]
             yield
-
-v = {}
-l = listener(v)
-t = talker(v)
-
-while True:
-    l.send(None)
-    t.send(None)
-
-    v["motor_left"] = -50 if v.get("line_left") else +75
-    v["motor_right"] = -50 if v.get("line_right") else +75
-
-    print repr(v)
