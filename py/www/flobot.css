@@ -1,0 +1,51 @@
+@import url(https://fonts.googleapis.com/css?family=Architects+Daughter);
+
+div#main { position: relative; height: 100%;}
+
+svg { font-family: "Architects Daughter", "Chalkboard SE", "Comic Sans", sans-serif; }
+text { dominant-baseline: middle; text-anchor: middle; }
+
+
+g.node { position: absolute; }
+g.node rect { stroke: blue; stroke-width: 2; fill: #DDD; cursor: move; }
+g.node path { stroke: blue; stroke-width: 2; fill: #DDD; cursor: move; }
+
+g.node text { cursor: move; }
+g.node.drag rect { stroke: red; fill: #FDD; }
+g.node.drag path { stroke: red; fill: #FDD; }
+
+g.node circle.port { stroke: blue; stroke-width: 2; fill: #DDD; cursor: crosshair; }
+g.node text.port { font-size: 60%; cursor: crosshair; }
+
+g.node.drag circle.port, g.node circle.port.drag, g.node rect.port.drag { stroke: red; fill: #FDD; }
+g.node circle.port.okay, g.node rect.port.okay { stroke: green; fill: #DFD; }
+
+text.edge { font-family: fixed; stroke: red; }
+
+path.edge { fill: transparent; stroke-width: 2; stroke: #888;}
+path.edge.drag { stroke: red; }
+path.edge.okay { stroke: green; }
+
+div.instructions {
+    position: fixed;
+    top: 25px;
+    width: 300px;
+    right: 350px;
+    margin: auto;
+    z-index: -5;
+}
+
+rect.toolbox {
+    stroke: blue; stroke-width: 2; fill: #F8F8F8; cursor: move; rx: 5px; z-index: -2;
+}
+
+.invert {
+    text-decoration: overline;
+}
+
+input {
+    border: none;
+    background-color: #ddd;
+    font-size: 20px;
+    text-align: center;
+}
