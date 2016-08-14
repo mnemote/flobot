@@ -2,6 +2,16 @@
  FloBot
 ========
 
+PLEASE NOTE
+===========
+
+    This project is a bit of a mess right now as I'm half way through
+    cutting across from C to MicroPython.  I know I've just talked about
+    it at PyCon AU, but if you're interested in contributing, please give
+    me a couple of weeks to tidy up!
+
+    -- Nick
+
 A visual dataflow language for educational robots, with a
 graphical editor which runs in your web browser.
 
