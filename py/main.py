@@ -69,7 +69,8 @@ def web_server_worker(sck):
       req_content_length = int(req_headers.get(b'content-length',0))
       req_body = b''
       while len(req_body) < req_content_length:
-        req_body += sck.read(req_content_length - len(req_body))
+        x = sck.read(req_content_length - len(req_body))
+        if x: req_body += x
         yield
      
       http_status, res_headers, res_body = handle_request(
@@ -165,6 +166,7 @@ def executor():
     yield
 
 def loop():
+  mbot.initialize()
   tasks = [
     web_server('0.0.0.0', 80),
     mbot.talker(prog_loc),

@@ -6,6 +6,8 @@ from sys import argv
 
 port = serial.Serial("/dev/ttyUSB0", 115200)
 
+port.write(b'\x03')
+
 for fn in argv[1:]:
     fh = open(fn, "r")
 
@@ -18,5 +20,7 @@ for fn in argv[1:]:
         time.sleep(0.1)
     
     port.write('_fh.close()\r')
+
+port.write(b'\x04')
 
 port.close()

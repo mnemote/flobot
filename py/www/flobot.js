@@ -503,29 +503,31 @@ window.onload = function () {
     }
 
     Prog.prototype.poll = function() {
-        ajax_post('http://10.107.1.33/prog', this.upload_callback.bind(this));
+        ajax_post('http://10.107.1.33/prog', '', this.upload_callback.bind(this));
     }
 
     Prog.prototype.upload_callback = function (status, text) {
         if (status == 200) {
-            //this.update(text);
+            this.update(text);
             if (poll_timer) clearTimeout(poll_timer);
             poll_timer = setTimeout(this.poll.bind(this), 1000);
         } else {
+            document.getElementById('return').textContent = status + "\n\n" + text;
             if (poll_timer) clearTimeout(poll_timer);
         }
-        var s = this.serialize() + "\n\n" + (status == 200 ? text : status);
-        document.getElementById('debug').textContent = s;
     }
 
     Prog.prototype.update = function (text) {
-        var ports_dict = {};
-        var pp = text.split(/\s+/);
-        for (var i=0; i<pp.length; i+=2) {
-            var val = parseInt(pp[i+1], 16);
-            if (val > 0x7FFF) val -= 0x10000;
-            ports_dict[1*pp[i]] = val / 100;
+        var ports_dict = JSON.parse(text);
+
+        var s = "";
+        for (var k in ports_dict) {
+            if (ports_dict.hasOwnProperty(k)) {
+                s += k + " = " + ports_dict[k] + "\n";
+            }
         }
+        document.getElementById('return').textContent = s;
+
         this.nodes.forEach(function (n) {
             n.output_ports.forEach(function (p) {
                 if (p.port_id) p.show_value(ports_dict[p.port_id] || 0);
