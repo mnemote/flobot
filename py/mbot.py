@@ -1,6 +1,6 @@
 try:
     import machine
-    port = machine.UART(0, 115200)
+    port = machine.UART(1, 115200)
 except ImportError:
     import serial
     port = serial.Serial("/dev/ttyUSB0", baudrate=115200, timeout=0)

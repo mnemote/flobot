@@ -498,12 +498,12 @@ window.onload = function () {
     Prog.prototype.upload = function() {
         var s = this.serialize();
         document.getElementById('debug').textContent = s;
-        ajax_post('http://10.107.1.33/prog', s, this.upload_callback.bind(this));
+        ajax_post('/prog', s, this.upload_callback.bind(this));
         if (!poll_timer) poll_timer = setInterval(this.poll.bind(this), 100);
     }
 
     Prog.prototype.poll = function() {
-        ajax_post('http://10.107.1.33/prog', '', this.upload_callback.bind(this));
+        ajax_post('/prog', '', this.upload_callback.bind(this));
     }
 
     Prog.prototype.upload_callback = function (status, text) {
@@ -646,7 +646,7 @@ window.onload = function () {
         }).join("\n");
     }
     
-    ajax_get('opcodes.json', function (status, data) {
+    ajax_get('/opcodes.js', function (status, data) {
         var json = JSON.parse(data);
         var prog = new Prog(json);
 
