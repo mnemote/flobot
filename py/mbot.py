@@ -1,6 +1,6 @@
 try:
     import machine
-    port = machine.UART(1, 115200)
+    port = machine.UART(2, 115200)
 except ImportError:
     import serial
     port = serial.Serial("/dev/ttyUSB0", baudrate=115200, timeout=0)
@@ -34,14 +34,14 @@ def listener(vlocals):
         r = port.read()
         if r: buf += r
         if buf:
-            if buf[0] == '\x91':
+            if buf[0] == 0x91:
                 if len(buf) >= 3:
-                    vlocals["line_left"] = ord(buf[1]) & 0x02 != 0
-                    vlocals["line_right"] = ord(buf[1]) & 0x04 != 0
+                    vlocals["line_left"] = buf[1] & 0x02 != 0
+                    vlocals["line_right"] = buf[1] & 0x04 != 0
                     buf = buf[3:]
-            elif buf[0] == '\xe6':
+            elif buf[0] == 0xe6:
                 if len(buf) >= 3:
-                    vlocals["ambient"] = ord(buf[2]) * 128 + ord(buf[1])
+                    vlocals["ambient"] = (buf[2] * 128 + buf[1]) / 1024
                     buf = buf[3:]
             else:
                 buf = buf[1:]
@@ -52,14 +52,12 @@ def talker(vlocals):
         ml = int(min(255, abs(vlocals.get("motor_left", 0) * 2.55)))
         dl = 1 if vlocals.get("motor_left", 0) < 0 else 0
         mr = int(min(255, abs(vlocals.get("motor_right", 0) * 2.55)))
-        dr = 1 if vlocals.get("motor_right", 0) < 0 else 0
+        dr = 1 if vlocals.get("motor_right", 0) > 0 else 0 # reversed
 
         buf = bytearray([
-            #0xF5, 0x04, dl,
-            0xE5, ml & 0x7F, ml >> 7,
-            0xE6, mr & 0x7F, mr >> 7,
-            #0xF5, 0x07, dr,
-            0x90, (dl << 4), dr
+            0xE5, ml & 0x7F, ml >> 7,  # Set PWM on pin 5
+            0xE6, mr & 0x7F, mr >> 7,  # Set PWM on pin 6
+            0x90, (dl << 4), dr        # Set digital outputs 4 and 7
         ])
         while buf:
             x = port.write(buf)

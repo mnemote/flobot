@@ -12,7 +12,7 @@ http_header_re = ure.compile(r"(\w+) (\S+) (HTTP/1.[01])\s*$")
 
 crlf = b"\r\n"
 
-prog = None
+prog = ""
 prog_loc = {}
 prog_glo = {}
 
@@ -128,7 +128,7 @@ def web_server_worker(sck, rem):
         if x: 
           dat = dat[x:]
       if not keep_alive:
-        sck.shutdown(socket.SHUT_RDWR)
+        sck.close()
         return
   except Exception as e:
     sck.close()
@@ -148,11 +148,12 @@ def handle_request(http_method, http_request, req_headers, req_body):
       http_status = 404
       res_body = b"Not found"
   elif http_method == b'POST':
-    prog = req_body
+    if req_body:
+      prog = req_body.decode('utf-8')
     try:
       exec(prog, prog_glo, prog_loc)
       http_status = 200
-      res_body = json.dumps(prog_loc)
+      res_body = json.dumps(prog_loc).encode('utf-8')
     except Exception as e:
       http_status = 400
       res_body = str(e).encode('utf-8')
